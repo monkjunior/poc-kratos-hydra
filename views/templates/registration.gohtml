@@ -1,0 +1,17 @@
+{{define "yield"}}
+<form action="/auth/registration" method="POST">
+{{/*  <input type="hidden" name="_csrf" value="{{ csrfToken }}" />*/}}
+{{/*  <input type="hidden" name="challenge" value="{{ challenge }}" />*/}}
+  <div class="form-group">
+    <label for="email">Email</label>
+    <input type="email" id="email" class="form-control" name="email" placeholder="Enter your email address" />
+  </div>
+
+  <div class="form-group">
+    <label for="password">Password</label>
+    <input type="password" id="password" class="form-control" name="password" />
+  </div>
+
+  <button type="submit" class="btn btn-primary">Sign Up</button>
+</form>
+{{end}}
