@@ -23,8 +23,8 @@ type Users struct {
 func (u *Users) GetLogin(w http.ResponseWriter, r *http.Request) {
 	log.Println("GET /auth/login")
 	// TODO: check if login or not
-	http.Redirect(w, r, "http://127.0.0.1:4455/.ory/kratos/public/self-service/login/browser", http.StatusFound)
-	//u.LoginView.Render(w, r, nil)
+	//http.Redirect(w, r, "http://127.0.0.1:4455/.ory/kratos/public/self-service/login/browser", http.StatusFound)
+	u.LoginView.Render(w, r, nil)
 }
 
 type LoginForm struct {
