@@ -1,3 +1,6 @@
+compile:
+	go build -o bin/ory-poc *.go
+
 build:
 	docker-compose build kratos-selfservice-ui-node
 

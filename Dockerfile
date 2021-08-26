@@ -10,7 +10,7 @@ RUN go mod download
 
 COPY . .
 
-RUN make build
+RUN make compile
 
 # Runtime layer
 FROM centos:8
