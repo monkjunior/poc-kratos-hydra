@@ -10,10 +10,14 @@ import (
 	"os"
 
 	kratosClient "github.com/ory/kratos-client-go"
+	kratosClientClient "github.com/ory/kratos-client-go/client"
 )
 
 func main() {
-	// TODO: What is cookie jar
+	// Cookies can not be set automatically in testing environment because we do not request through a browser.
+	// So we need to use cookie jar instead.
+	//
+	// More detailed information: https://stackoverflow.com/questions/31270461/what-is-the-difference-between-cookie-and-cookiejar
 	cj, _ := cookiejar.New(nil)
 
 	apiClient := kratosClient.NewAPIClient(&kratosClient.Configuration{
@@ -38,6 +42,10 @@ func main() {
 	ExitOnError(err, res)
 	PrintJSONPretty(flow)
 
+	flow2, res2, err2 := apiClient.V0alpha1Api.GetSelfServiceRegistrationFlow(ctx).Id(flow.GetId()).Execute()
+	ExitOnError(err2, res2)
+	PrintJSONPretty(flow2)
+
 	flowCSRF := flow.Ui.GetNodes()[0].Attributes.UiNodeInputAttributes.Value.(string)
 	result, res, err := apiClient.V0alpha1Api.SubmitSelfServiceRegistrationFlow(ctx).Flow(
 		flow.GetId(),
@@ -55,18 +63,24 @@ func main() {
 	).Execute()
 	ExitOnError(err, res)
 	PrintJSONPretty(result)
+
+	kratosClientClient.Get
 }
 
 func ExitOnError(err error, res *http.Response) {
 	if err == nil {
 		return
 	}
-	bodyBytes, err := ioutil.ReadAll(res.Body)
-	if err != nil {
-		out, _ := json.MarshalIndent(err, "", "  ")
-		fmt.Printf("%s\n\nAn error occurred: %+v\n", out, err)
-		os.Exit(1)
+	var bodyBytes []byte
+	if res != nil {
+		bodyBytes, err = ioutil.ReadAll(res.Body)
+		if err != nil {
+			out, _ := json.MarshalIndent(err, "", "  ")
+			fmt.Printf("%s\n\nAn error occurred: %+v\n", out, err)
+			os.Exit(1)
+		}
 	}
+
 	body, _ := json.MarshalIndent(json.RawMessage(bodyBytes), "", "  ")
 	out, _ := json.MarshalIndent(err, "", "  ")
 	fmt.Printf("%s\n\nAn error occurred: %+v\nbody: %s\n", out, err, body)
