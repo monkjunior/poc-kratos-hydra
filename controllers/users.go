@@ -5,7 +5,6 @@ import (
 	"net/http"
 
 	"github.com/gorilla/schema"
-	"github.com/monkjunior/poc-kratos-hydra/kratos"
 	"github.com/monkjunior/poc-kratos-hydra/views"
 )
 
@@ -18,14 +17,12 @@ func NewUsers() *Users {
 	return &Users{
 		LoginView:        views.NewView("bootstrap", "login"),
 		RegistrationView: views.NewView("bootstrap", "registration"),
-		kratosClient:     kratos.NewClient(),
 	}
 }
 
 type Users struct {
 	LoginView        *views.View
 	RegistrationView *views.View
-	kratosClient     kratos.ClientService
 }
 
 func (u *Users) GetLogin(w http.ResponseWriter, r *http.Request) {
