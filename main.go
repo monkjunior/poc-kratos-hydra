@@ -7,18 +7,21 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/monkjunior/poc-kratos-hydra/controllers"
+	"github.com/monkjunior/poc-kratos-hydra/middlewares"
 )
 
 func main() {
 	protectedSites := controllers.NewProtectedSites()
 	userC := controllers.NewUsers()
 
+	logMw := middlewares.EntryLog{}
+
 	r := mux.NewRouter()
-	r.Handle("/", protectedSites.Dashboard)
-	r.HandleFunc("/auth/login", userC.GetLogin).Methods("GET")
-	r.HandleFunc("/auth/login", userC.PostLogin).Methods("POST")
-	r.HandleFunc("/auth/registration", userC.GetRegistration).Methods("GET")
-	r.HandleFunc("/auth/registration", userC.PostRegistration).Methods("POST")
+	r.Handle("/", logMw.Apply(protectedSites.Dashboard))
+	r.HandleFunc("/auth/login", logMw.ApplyFn(userC.GetLogin)).Methods("GET")
+	r.HandleFunc("/auth/login", logMw.ApplyFn(userC.PostLogin)).Methods("POST")
+	r.HandleFunc("/auth/registration", logMw.ApplyFn(userC.GetRegistration)).Methods("GET")
+	r.HandleFunc("/auth/registration", logMw.ApplyFn(userC.PostRegistration)).Methods("POST")
 	fmt.Println("Listening at port 4435 ...")
 	log.Fatal(http.ListenAndServe(":4435", r))
 }

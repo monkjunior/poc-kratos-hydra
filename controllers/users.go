@@ -30,11 +30,9 @@ type Users struct {
 func (u *Users) GetLogin(w http.ResponseWriter, r *http.Request) {
 	flow := r.URL.Query().Get("flow")
 	if flow == "" {
-		log.Println("GET /auth/login | flow not found")
 		http.Redirect(w, r, KratosPublicBaseURL+"/self-service/login/browser", http.StatusFound)
 		return
 	}
-	log.Printf("GET /auth/login | flow = %s\n", flow)
 	u.LoginView.Render(w, r, nil)
 }
 
@@ -54,7 +52,6 @@ func (u *Users) PostLogin(w http.ResponseWriter, r *http.Request) {
 	dec := schema.NewDecoder()
 	dec.IgnoreUnknownKeys(true)
 	if err := dec.Decode(&form, r.PostForm); err != nil {
-		log.Println(err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 	log.Println(form)
@@ -65,11 +62,9 @@ func (u *Users) PostLogin(w http.ResponseWriter, r *http.Request) {
 func (u *Users) GetRegistration(w http.ResponseWriter, r *http.Request) {
 	flow := r.URL.Query().Get("flow")
 	if flow == "" {
-		log.Println("GET /auth/registration | flow not found")
 		http.Redirect(w, r, KratosPublicBaseURL+"/self-service/registration/browser", http.StatusFound)
 		return
 	}
-	log.Printf("GET /auth/registration | flow = %s\n", flow)
 	u.RegistrationView.Render(w, r, nil)
 }
 
@@ -91,7 +86,6 @@ func (u *Users) PostRegistration(w http.ResponseWriter, r *http.Request) {
 		log.Println(err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
-	log.Printf("POST /auth/registration | form=%+v\n", form)
 	// TODO: implement register
 	//http.Redirect(w, r, KratosPublicBaseURL+"/self-service/register/browser", http.StatusFound)
 }
