@@ -1,3 +1,4 @@
 bin/
+tmp/
 docker-compose.yaml
 README.md

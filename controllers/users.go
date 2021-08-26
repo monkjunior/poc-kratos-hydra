@@ -1,30 +1,37 @@
 package controllers
 
 import (
-	"github.com/gorilla/schema"
 	"log"
 	"net/http"
 
+	"github.com/gorilla/schema"
 	"github.com/monkjunior/poc-kratos-hydra/views"
+	kratosClient "github.com/ory/kratos-client-go"
+)
+
+var (
+	KratosPublicBaseURL = "http://127.0.0.1:4455/.ory/kratos/public"
 )
 
 func NewUsers() *Users {
 	return &Users{
 		LoginView:        views.NewView("bootstrap", "login"),
 		RegistrationView: views.NewView("bootstrap", "registration"),
+		kratosClient:     kratosClient.NewConfiguration(),
 	}
 }
 
 type Users struct {
 	LoginView        *views.View
 	RegistrationView *views.View
+	kratosClient     *kratosClient.Configuration
 }
 
 func (u *Users) GetLogin(w http.ResponseWriter, r *http.Request) {
 	flow := r.URL.Query().Get("flow")
 	if flow == "" {
 		log.Println("GET /auth/login | flow not found")
-		http.Redirect(w, r, "http://127.0.0.1:4455/.ory/kratos/public/self-service/login/browser", http.StatusFound)
+		http.Redirect(w, r, KratosPublicBaseURL+"/self-service/login/browser", http.StatusFound)
 		return
 	}
 	log.Printf("GET /auth/login | flow = %s\n", flow)
@@ -51,14 +58,15 @@ func (u *Users) PostLogin(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 	log.Println(form)
-	http.Redirect(w, r, "http://127.0.0.1:4455/.ory/kratos/public/self-service/login/browser", http.StatusFound)
+	// TODO: implement login
+	//http.Redirect(w, r, KratosPublicBaseURL + "/self-service/login/browser", http.StatusFound)
 }
 
 func (u *Users) GetRegistration(w http.ResponseWriter, r *http.Request) {
 	flow := r.URL.Query().Get("flow")
 	if flow == "" {
 		log.Println("GET /auth/registration | flow not found")
-		http.Redirect(w, r, "http://127.0.0.1:4455/.ory/kratos/public/self-service/registration/browser", http.StatusFound)
+		http.Redirect(w, r, KratosPublicBaseURL+"/self-service/registration/browser", http.StatusFound)
 		return
 	}
 	log.Printf("GET /auth/registration | flow = %s\n", flow)
@@ -83,6 +91,7 @@ func (u *Users) PostRegistration(w http.ResponseWriter, r *http.Request) {
 		log.Println(err)
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
-	log.Println(form)
-	http.Redirect(w, r, "http://127.0.0.1:4455/.ory/kratos/public/self-service/register/browser", http.StatusFound)
+	log.Printf("POST /auth/registration | form=%+v\n", form)
+	// TODO: implement register
+	//http.Redirect(w, r, KratosPublicBaseURL+"/self-service/register/browser", http.StatusFound)
 }
