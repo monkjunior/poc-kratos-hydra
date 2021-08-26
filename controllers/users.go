@@ -10,20 +10,24 @@ import (
 
 func NewUsers() *Users {
 	return &Users{
-		LoginView: views.NewView("bootstrap", "login"),
+		LoginView:        views.NewView("bootstrap", "login"),
 		RegistrationView: views.NewView("bootstrap", "registration"),
 	}
 }
 
 type Users struct {
-	LoginView *views.View
+	LoginView        *views.View
 	RegistrationView *views.View
 }
 
 func (u *Users) GetLogin(w http.ResponseWriter, r *http.Request) {
 	log.Println("GET /auth/login")
-	// TODO: check if login or not
-	//http.Redirect(w, r, "http://127.0.0.1:4455/.ory/kratos/public/self-service/login/browser", http.StatusFound)
+	flow := r.URL.Query().Get("flow")
+	if flow == "" {
+		log.Println("GET /auth/login | flow not found")
+		http.Redirect(w, r, "http://127.0.0.1:4455/.ory/kratos/public/self-service/login/browser", http.StatusFound)
+	}
+	log.Printf("GET /auth/login | flow = %s\n", flow)
 	u.LoginView.Render(w, r, nil)
 }
 
