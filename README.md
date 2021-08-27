@@ -14,16 +14,19 @@ There are 3 stages:
 
 Run example:
 ```bash
-$ docker-compose \
-  up --build --force-recreate
+$ make run-all
 ```
 
 The UI will be served at `http://127.0.0.1:4455/`
 
 Clean example:
 ```bash
-$ docker-compose \
-  rm -s -v -f
+$ make clean
+```
+
+Restart UI service:
+```bash
+$ make run
 ```
 
 ## Registration flow
