@@ -2,13 +2,13 @@ package main
 
 import (
 	"fmt"
-	kratosClient "github.com/ory/kratos-client-go"
 	"log"
 	"net/http"
 
 	"github.com/gorilla/mux"
 	"github.com/monkjunior/poc-kratos-hydra/controllers"
 	"github.com/monkjunior/poc-kratos-hydra/middlewares"
+	kratosClient "github.com/ory/kratos-client-go"
 )
 
 var (

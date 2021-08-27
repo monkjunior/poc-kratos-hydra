@@ -2,17 +2,20 @@ package middlewares
 
 import (
 	builtInCtx "context"
-	"github.com/monkjunior/poc-kratos-hydra/context"
 	"log"
 	"net/http"
 
+	"github.com/monkjunior/poc-kratos-hydra/context"
 	kratosClient "github.com/ory/kratos-client-go"
 )
 
+// Identity middleware checks if current session of received request is active, it then saves the result and logoutURL
+// to the request context.
 type Identity struct {
 	KratosClient *kratosClient.APIClient
 }
 
+// Apply logs request before passing it to http.Handler
 func (mw *Identity) Apply(next http.Handler) http.HandlerFunc {
 	return mw.ApplyFn(next.ServeHTTP)
 }

@@ -8,6 +8,7 @@ func NewPublicSites() *PublicSites {
 	}
 }
 
+// PublicSites is a list of sites that do not require use to log in.
 type PublicSites struct {
 	Home *views.View
 }

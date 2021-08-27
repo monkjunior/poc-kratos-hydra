@@ -8,6 +8,8 @@ func NewProtectedSites() *ProtectedSites {
 	}
 }
 
+// ProtectedSites is a list of sites that requires user logged in.
+// Current we are use Oathkeeper to authenticate the session of requests comming.
 type ProtectedSites struct {
 	Dashboard *views.View
 }
