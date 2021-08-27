@@ -64,6 +64,9 @@ secrets:
     - PLEASE-CHANGE-ME-I-AM-VERY-INSECURE
 
 hashers:
+  algorithm: bcrypt
+  bcrypt:
+    cost: 12
   argon2:
     parallelism: 1
     memory: 128MB

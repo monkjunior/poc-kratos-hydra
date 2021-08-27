@@ -45,8 +45,17 @@ func (v *View) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 // Render is used to render the view with predefined layout
 func (v *View) Render(w http.ResponseWriter, r *http.Request, data interface{}) {
 	w.Header().Set("Content-Type", "text/html")
+	var vd Data
+	switch data.(type) {
+	case Data:
+		vd = data.(Data)
+	default:
+		vd = Data{
+			Yield: data,
+		}
+	}
 	var buf bytes.Buffer
-	if err := v.Template.ExecuteTemplate(&buf, v.Layout, nil); err != nil {
+	if err := v.Template.ExecuteTemplate(&buf, v.Layout, vd); err != nil {
 		log.Println(err)
 		http.Error(w, AlertMsgGeneric, http.StatusInternalServerError)
 		return

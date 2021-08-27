@@ -22,7 +22,7 @@ func main() {
 	apiClient := kratosClient.NewAPIClient(&kratosClient.Configuration{
 		Host:   "127.0.0.1:4455",
 		Scheme: "http",
-		Debug:     true,
+		Debug:  true,
 		Servers: []kratosClient.ServerConfiguration{
 			kratosClient.ServerConfiguration{
 				URL: "/.ory/kratos/public",
