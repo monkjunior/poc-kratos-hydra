@@ -1,11 +1,11 @@
 log:
   level: debug
-  format: json
+  leak_sensitive_values: true
 
 serve:
   proxy:
     cors:
-      enabled: true
+      enabled: false
       allowed_origins:
         - "*"
       allowed_methods:
@@ -61,8 +61,8 @@ authenticators:
     config:
       check_session_url: http://kratos:4433/sessions/whoami
       preserve_path: true
-      extra_from: "@this"
-      subject_from: "identity.id"
+#      extra_from: "@this"
+#      subject_from: "identity.id"
       only:
         - ory_kratos_session
 

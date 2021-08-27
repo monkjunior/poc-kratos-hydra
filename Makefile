@@ -9,8 +9,8 @@ run-all:
       up --build --force-recreate -d
 
 run:
-	docker-compose up \
-	  kratos-selfservice-ui-node -d
+	docker-compose up -d --build \
+      kratos-selfservice-ui-node
 
 clean:
 	docker-compose \

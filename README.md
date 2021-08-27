@@ -28,8 +28,6 @@ $ docker-compose \
 
 [API Flow Golang example](https://www.ory.sh/kratos/docs/next/self-service/flows/user-registration/#registration-with-usernameemail-and-password-1)
 
-
-
 ## References, libs and packages
 
 Golang client package:
