@@ -3,7 +3,10 @@
   {{if .CsrfToken }}
   <input type="hidden" name="csrf_token" value="{{ .CsrfToken }}" />
   {{end }}
-{{/*  <input type="hidden" name="challenge" value="{{ challenge }}" />*/}}
+
+  <input type="hidden"  name="method" value="password"/>
+
+  {{/*  <input type="hidden" name="challenge" value="{{ challenge }}" />*/}}
   <div class="form-group">
     <label for="email">Email</label>
     <input type="email" id="email" class="form-control" name="traits.email" placeholder="Enter your email address" />
@@ -14,6 +17,6 @@
     <input type="password" id="password" class="form-control" name="password" />
   </div>
 
-  <input type="submit" class="btn btn-primary" name="method" value="password"/>
+  <button type="submit" class="btn btn-primary">Sign Up</button>
 </form>
 {{end}}
