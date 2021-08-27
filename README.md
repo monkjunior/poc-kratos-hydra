@@ -18,6 +18,8 @@ $ docker-compose \
   up --build --force-recreate
 ```
 
+The UI will be served at `http://127.0.0.1:4455/`
+
 Clean example:
 ```bash
 $ docker-compose \
@@ -27,6 +29,10 @@ $ docker-compose \
 ## Registration flow
 
 [API Flow Golang example](https://www.ory.sh/kratos/docs/next/self-service/flows/user-registration/#registration-with-usernameemail-and-password-1)
+
+## Login flow
+
+## Logout flow
 
 ## References, libs and packages
 

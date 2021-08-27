@@ -11,24 +11,13 @@ import (
 var (
 	// TODO: this should be moved to kratos package
 	KratosPublicBaseURL = "http://127.0.0.1:4455/.ory/kratos/public"
-
-	CfgKratos = kratosClient.Configuration{
-		Host:   "oathkeeper:4455",
-		Scheme: "http",
-		Debug:  true,
-		Servers: []kratosClient.ServerConfiguration{
-			{
-				URL: "/.ory/kratos/public",
-			},
-		},
-	}
 )
 
-func NewUsers() *Users {
+func NewUsers(k *kratosClient.APIClient) *Users {
 	return &Users{
 		LoginView:        views.NewView("bootstrap", "login"),
 		RegistrationView: views.NewView("bootstrap", "registration"),
-		kratosClient:     kratosClient.NewAPIClient(&CfgKratos),
+		kratosClient:     k,
 	}
 }
 
@@ -40,12 +29,12 @@ type Users struct {
 
 // LoginForm stores data for rendering Login form and submit a Login flow
 type LoginForm struct {
-	SubmitMethod       string
-	Action             string
-	CsrfToken          string `schema:"csrf_token"`
-	FlowID             string
-	Email              string `schema:"password_identifier"`
-	Password           string `schema:"password"`
+	SubmitMethod string
+	Action       string
+	CsrfToken    string `schema:"csrf_token"`
+	FlowID       string
+	Email        string `schema:"password_identifier"`
+	Password     string `schema:"password"`
 }
 
 // GetLogin requires flow params, if the flow is not set, it will redirect to Kratos to browse a new one.

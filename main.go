@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	kratosClient "github.com/ory/kratos-client-go"
 	"log"
 	"net/http"
 
@@ -10,16 +11,34 @@ import (
 	"github.com/monkjunior/poc-kratos-hydra/middlewares"
 )
 
+var (
+	CfgKratos = kratosClient.Configuration{
+		Host:   "oathkeeper:4455",
+		Scheme: "http",
+		Debug:  true,
+		Servers: []kratosClient.ServerConfiguration{
+			{
+				URL: "/.ory/kratos/public",
+			},
+		},
+	}
+)
+
 func main() {
+	k := kratosClient.NewAPIClient(&CfgKratos)
+
+	publicSites := controllers.NewPublicSites()
 	protectedSites := controllers.NewProtectedSites()
-	userC := controllers.NewUsers()
+	userC := controllers.NewUsers(k)
 
 	logMw := middlewares.EntryLog{}
+	identityMw := middlewares.Identity{KratosClient: k}
 
 	r := mux.NewRouter()
-	r.Handle("/", logMw.Apply(protectedSites.Dashboard))
-	r.HandleFunc("/auth/login", logMw.ApplyFn(userC.GetLogin)).Methods("GET")
-	r.HandleFunc("/auth/registration", logMw.ApplyFn(userC.GetRegistration)).Methods("GET")
+	r.Handle("/", publicSites.Home)
+	r.Handle("/dashboard", protectedSites.Dashboard)
+	r.HandleFunc("/auth/login", userC.GetLogin).Methods("GET")
+	r.HandleFunc("/auth/registration", userC.GetRegistration).Methods("GET")
 	fmt.Println("Listening at port 4435 ...")
-	log.Fatal(http.ListenAndServe(":4435", r))
+	log.Fatal(http.ListenAndServe(":4435", logMw.Apply(identityMw.Apply(r))))
 }

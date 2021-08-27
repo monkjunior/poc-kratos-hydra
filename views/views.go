@@ -2,11 +2,13 @@ package views
 
 import (
 	"bytes"
+	"github.com/monkjunior/poc-kratos-hydra/context"
 	"html/template"
 	"io"
 	"log"
 	"net/http"
 	"path/filepath"
+	"strings"
 )
 
 const (
@@ -54,13 +56,37 @@ func (v *View) Render(w http.ResponseWriter, r *http.Request, data interface{}) 
 			Yield: data,
 		}
 	}
+	var logoutURL string
+	vd.IsSessionActive, logoutURL = context.GetSession(r.Context())
+	vd.LogoutURL, vd.LogoutToken = parseLogout(logoutURL)
 	var buf bytes.Buffer
 	if err := v.Template.ExecuteTemplate(&buf, v.Layout, vd); err != nil {
 		log.Println(err)
 		http.Error(w, AlertMsgGeneric, http.StatusInternalServerError)
 		return
 	}
-	io.Copy(w, &buf)
+	_, _ = io.Copy(w, &buf)
+}
+
+// parseLogout take logoutURLFull in the format of schema://logout_url?token=<token_id>
+// and return logout_url and token_id.
+//
+// if the received input is not in the above format, return empty strings
+func parseLogout(logoutURLFull string) (string, string) {
+	if logoutURLFull == "" {
+		return "", ""
+	}
+	logoutURLArr := strings.Split(logoutURLFull, "?")
+	if len(logoutURLArr) != 2 {
+		return "", ""
+	}
+	LogoutTokenArr := strings.Split(logoutURLArr[1], "=")
+	if len(LogoutTokenArr) != 2 {
+		return "", ""
+	}
+	LogoutURL := logoutURLArr[0]
+	LogoutToken := LogoutTokenArr[1]
+	return LogoutURL, LogoutToken
 }
 
 // layoutFiles return a slice of strings representing
