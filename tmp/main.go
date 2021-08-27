@@ -10,7 +10,6 @@ import (
 	"os"
 
 	kratosClient "github.com/ory/kratos-client-go"
-	kratosClientClient "github.com/ory/kratos-client-go/client"
 )
 
 func main() {
@@ -23,10 +22,6 @@ func main() {
 	apiClient := kratosClient.NewAPIClient(&kratosClient.Configuration{
 		Host:   "127.0.0.1:4455",
 		Scheme: "http",
-		DefaultHeader: map[string]string{
-			"Env": "dev",
-		},
-		UserAgent: "monk_junior",
 		Debug:     true,
 		Servers: []kratosClient.ServerConfiguration{
 			kratosClient.ServerConfiguration{
@@ -63,8 +58,6 @@ func main() {
 	).Execute()
 	ExitOnError(err, res)
 	PrintJSONPretty(result)
-
-	kratosClientClient.Get
 }
 
 func ExitOnError(err error, res *http.Response) {

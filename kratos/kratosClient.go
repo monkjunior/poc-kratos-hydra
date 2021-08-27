@@ -11,7 +11,7 @@ import (
 
 var (
 	cfgKratos = kratosClient.Configuration{
-		Host:   "127.0.0.1:4455",
+		Host:   "oathkeeper:4455",
 		Scheme: "http",
 		Debug:  true,
 		Servers: []kratosClient.ServerConfiguration{

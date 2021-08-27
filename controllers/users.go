@@ -67,20 +67,20 @@ func (u *Users) GetRegistration(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	// TODO: fetch registration payload from Kratos for form rendering at /self-service/registration/flows?id=<flow-id>
-	//flowObject , res , err := u.kratosClient.GetRegistrationFlow(context.Background(), flow, r.Header.Get("Cookie"))
-	//if err != nil {
-	//	log.Println("Got ERROR", err)
-	//	return
-	//}
-	//if res == nil {
-	//	log.Println("Empty response")
-	//	return
-	//}
-	//if res.StatusCode != http.StatusOK {
-	//	log.Println("Response status is not 200. Status: ", res.StatusCode)
-	//	return
-	//}
-	//kratos.PrintJSONPretty(flowObject)
+	flowObject , res , err := u.kratosClient.GetRegistrationFlow(r.Context(), flow, r.Header.Get("Cookie"))
+	if err != nil {
+		log.Println("Got ERROR", err)
+		return
+	}
+	if res == nil {
+		log.Println("Empty response")
+		return
+	}
+	if res.StatusCode != http.StatusOK {
+		log.Println("Response status is not 200. Status: ", res.StatusCode)
+		return
+	}
+	kratos.PrintJSONPretty(flowObject)
 
 	u.RegistrationView.Render(w, r, nil)
 	//http.Redirect(w, r, KratosPublicBaseURL+"/self-service/registration/flows?id="+flow, http.StatusFound)
