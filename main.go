@@ -35,10 +35,13 @@ func main() {
 	identityMw := middlewares.Identity{KratosClient: k}
 
 	r := mux.NewRouter()
+
 	r.Handle("/", publicSites.Home)
 	r.Handle("/dashboard", protectedSites.Dashboard)
+
 	r.HandleFunc("/auth/login", userC.GetLogin).Methods("GET")
 	r.HandleFunc("/auth/registration", userC.GetRegistration).Methods("GET")
+
 	fmt.Println("Listening at port 4435 ...")
 	log.Fatal(http.ListenAndServe(":4435", logMw.Apply(identityMw.Apply(r))))
 }

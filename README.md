@@ -37,7 +37,17 @@ $ make run
 
 ## Logout flow
 
+## OIDC and Hydra
+
+[Kratos configuration](https://www.ory.sh/kratos/docs/concepts/credentials/openid-connect-oidc-oauth2/#configuration)
+
+Discussions about this topic:
+
+- [kratos-1511](https://github.com/ory/kratos/discussions/1511)
+
 ## References, libs and packages
+
+[Cookies vs Tokens](https://dzone.com/articles/cookies-vs-tokens-the-definitive-guide)
 
 Golang client package:
 
