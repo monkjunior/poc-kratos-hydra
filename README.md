@@ -43,6 +43,8 @@ $ make run
 
 Discussions about this topic:
 
+- [kratos-1145](https://github.com/ory/kratos/discussions/1145)
+
 - [kratos-1511](https://github.com/ory/kratos/discussions/1511)
 
 ## References, libs and packages

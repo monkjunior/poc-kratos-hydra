@@ -1,5 +1,10 @@
--
-  id: "ory:kratos:public:browser"
+# Configuration of access rules
+# Docs: https://www.ory.sh/oathkeeper/docs/api-access-rules
+#
+# In this project I do not tend to build Authorization layer
+# so all authorizer handlers are "allow".
+
+- id: "ory:kratos:public:browser"
   upstream:
     preserve_host: true
     url: "http://kratos:4433"
@@ -13,15 +18,13 @@
       - DELETE
       - PATCH
   authenticators:
-    -
-      handler: noop
+    - handler: noop
   authorizer:
     handler: allow
   mutators:
     - handler: noop
 
--
-  id: "ory:kratos:public"
+- id: "ory:kratos:public"
   upstream:
     preserve_host: true
     url: "http://kratos:4433"
@@ -35,15 +38,13 @@
       - DELETE
       - PATCH
   authenticators:
-    -
-      handler: noop
+    - handler: noop
   authorizer:
     handler: allow
   mutators:
     - handler: noop
 
--
-  id: "ory:kratos-selfservice-ui-node:anonymous"
+- id: "ory:kratos-selfservice-ui-node:anonymous"
   upstream:
     preserve_host: true
     url: "http://kratos-selfservice-ui-node:4435"
@@ -53,16 +54,13 @@
       - GET
       - POST
   authenticators:
-    -
-      handler: anonymous
+    - handler: anonymous
   authorizer:
     handler: allow
   mutators:
-    -
-      handler: noop
+    - handler: noop
 
--
-  id: "ory:kratos-selfservice-ui-node:protected"
+- id: "ory:kratos-selfservice-ui-node:protected"
   upstream:
     preserve_host: true
     url: "http://kratos-selfservice-ui-node:4435"
@@ -71,8 +69,7 @@
     methods:
       - GET
   authenticators:
-    -
-      handler: cookie_session
+    - handler: cookie_session
   authorizer:
     handler: allow
   mutators:
@@ -82,8 +79,7 @@
       config:
         to: http://127.0.0.1:4455/auth/login
 
--
-  id: "ory:kratos-selfservice-ui-node:public"
+- id: "ory:kratos-selfservice-ui-node:public"
   upstream:
     preserve_host: true
     url: "http://kratos-selfservice-ui-node:4435"
@@ -92,8 +88,7 @@
     methods:
       - GET
   authenticators:
-    -
-      handler: noop
+    - handler: noop
   authorizer:
     handler: allow
   mutators:

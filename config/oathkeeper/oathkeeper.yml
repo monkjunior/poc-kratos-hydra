@@ -1,9 +1,7 @@
-log:
-  level: debug
-  leak_sensitive_values: true
-
+# How Oathkeeper forward http requests: https://www.ory.sh/oathkeeper/docs/#decision-engine
 serve:
   proxy:
+    port: 4455
     cors:
       enabled: false
       allowed_origins:
@@ -21,11 +19,64 @@ serve:
         - Content-Type
       allow_credentials: true
       debug: true
+  api:
+    port: 4456
 
+# Verify that HTTP requests match the access rules before forward them to the next step (authentication)
+access_rules:
+  # matching_strategy currently supports 2 types: glob or regex
+  matching_strategy: glob
+  # where rules are stored
+  # can be file, inline (base64 encoded JSON or YAML) or link to file server.
+  repositories:
+    - file:///etc/config/oathkeeper/access-rules.yml
+
+# Validate HTTP credentials using methods like Bearer Token, Basic AuthZ or Cookie
+authenticators:
+  anonymous:
+    enabled: true
+    config:
+      subject: guest
+  cookie_session:
+    enabled: true
+    config:
+      check_session_url: http://kratos:4433/sessions/whoami
+      preserve_path: true
+      extra_from: "@this"
+      subject_from: "identity.id"
+      only:
+        - ory_kratos_session
+  noop:
+    enabled: true
+
+# Check request's permissions
+# In this project I do not tend to build Authorization layer
+# so all authorizer handlers are "allow".
+#
+# Integrate with Keto might be added later.
+authorizers:
+  allow:
+    enabled: true
+
+# Can add session data before forward the request to upstream API
+mutators:
+  noop:
+    enabled: true
+  id_token:
+    enabled: true
+    config:
+      issuer_url: http://127.0.0.1:4455/ # Sets the "iss" value of the ID Token.
+      jwks_url: file:///etc/config/oathkeeper/id_token.jwks.json # Where public keys should be fetched from
+      ttl: 60s # Defaults to one minute. Valid time units are: s (second), m (minute), h (hour).
+      claims: |
+        {
+          "session": {{ .Extra | toJson }}
+        }
+
+# Error handling
 errors:
   fallback:
     - json
-
   handlers:
     redirect:
       enabled: true
@@ -45,44 +96,5 @@ errors:
       config:
         verbose: true
 
-access_rules:
-  matching_strategy: glob
-  repositories:
-    - file:///etc/config/oathkeeper/access-rules.yml
-
-authenticators:
-  anonymous:
-    enabled: true
-    config:
-      subject: guest
-
-  cookie_session:
-    enabled: true
-    config:
-      check_session_url: http://kratos:4433/sessions/whoami
-      preserve_path: true
-#      extra_from: "@this"
-#      subject_from: "identity.id"
-      only:
-        - ory_kratos_session
-
-  noop:
-    enabled: true
-
-authorizers:
-  allow:
-    enabled: true
-
-mutators:
-  noop:
-    enabled: true
-
-  id_token:
-    enabled: true
-    config:
-      issuer_url: http://127.0.0.1:4455/
-      jwks_url: file:///etc/config/oathkeeper/id_token.jwks.json
-      claims: |
-        {
-          "session": {{ .Extra | toJson }}
-        }
+log:
+  level: debug
