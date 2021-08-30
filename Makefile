@@ -6,9 +6,17 @@ build:
 
 run-all:
 	docker-compose \
-      up --build --force-recreate -d
+      up --build  -d
 
-run:
+run-hydra:
+	docker-compose -f hydra-docker-compose.yaml \
+	  up -d --build --force-recreate
+
+clean-hydra:
+	docker-compose -f hydra-docker-compose.yaml \
+          rm -s -v -f
+
+run-ui:
 	docker-compose up -d --build \
       kratos-selfservice-ui-node
 

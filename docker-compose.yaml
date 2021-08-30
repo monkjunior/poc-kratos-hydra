@@ -63,7 +63,7 @@ services:
     restart: on-failure
     networks:
       - intranet
-
+  # Database for Kratos
   postgresd:
     image: postgres:latest
     ports:
