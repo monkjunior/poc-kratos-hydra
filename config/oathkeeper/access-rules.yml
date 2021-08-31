@@ -60,6 +60,8 @@
   mutators:
     - handler: noop
 
+# Protect APIS that match the config url
+# request will be authenticated using cookie_session authenticator.
 - id: "ory:kratos-selfservice-ui-node:protected"
   upstream:
     preserve_host: true

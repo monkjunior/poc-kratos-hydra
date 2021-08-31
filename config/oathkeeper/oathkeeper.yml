@@ -37,6 +37,11 @@ authenticators:
     enabled: true
     config:
       subject: guest
+  # cookie_session authenticator will forward request method, path, headers to
+  # session store (http://kratos:4433/sessions/whoami).jwt:
+  # If the session store return 200 and body { "subject": "...", "extra": {} } then
+  # the authenticator will set the subject appropriately.
+  # More details config: https://www.ory.sh/oathkeeper/docs/next/pipeline/authn/#cookie_session
   cookie_session:
     enabled: true
     config:
