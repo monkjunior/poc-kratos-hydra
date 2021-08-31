@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-
 	"golang.org/x/oauth2"
 )
 
@@ -42,7 +41,7 @@ func main() {
 
 		// Discovery returns the OAuth2 endpoints.
 		Endpoint: oauth2.Endpoint{
-			AuthURL: "http://127.0.0.1:4444/oauth2/auth",
+			AuthURL:  "http://127.0.0.1:4444/oauth2/auth",
 			TokenURL: "http://127.0.0.1:4444/oauth2/token",
 		},
 

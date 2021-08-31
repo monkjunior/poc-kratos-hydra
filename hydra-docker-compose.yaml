@@ -28,8 +28,8 @@ services:
       - LOG_LEAK_SENSITIVE_VALUES=true
       - URLS_SELF_ISSUER=http://127.0.0.1:4444
       - URLS_SELF_PUBLIC=http://127.0.0.1:4444
-      - URLS_CONSENT=http://127.0.0.1:4455/auth/consent
-      - URLS_LOGIN=http://127.0.0.1:4455/auth/login
+      - URLS_CONSENT=http://127.0.0.1:4455/auth/hydra/consent
+      - URLS_LOGIN=http://127.0.0.1:4455/auth/hydra/login
       - URLS_LOGOUT=http://127.0.0.1:4455/logout
       - SECRETS_SYSTEM=youReallyNeedToChangeThis
       - OIDC_SUBJECT_IDENTIFIERS_SUPPORTED_TYPES=public,pairwise

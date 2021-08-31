@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	hydraSDK "github.com/ory/hydra-client-go/client"
 	"log"
 	"net/http"
 
@@ -22,14 +23,26 @@ var (
 			},
 		},
 	}
+	ConfigHydraClient = hydraSDK.TransportConfig{
+		Host:     "hydra:4444",
+		BasePath: "/",
+		Schemes:  []string{"http"},
+	}
+	ConfigHydraAdmin = hydraSDK.TransportConfig{
+		Host:     "hydra:4445",
+		BasePath: "/",
+		Schemes:  []string{"http"},
+	}
 )
 
 func main() {
 	k := kratosClient.NewAPIClient(&CfgKratos)
+	hCli := hydraSDK.NewHTTPClientWithConfig(nil, &ConfigHydraClient)
+	hAdm := hydraSDK.NewHTTPClientWithConfig(nil, &ConfigHydraAdmin)
 
 	publicSites := controllers.NewPublicSites()
 	protectedSites := controllers.NewProtectedSites()
-	userC := controllers.NewUsers(k)
+	userC := controllers.NewUsers(k, hCli, hAdm)
 
 	logMw := middlewares.EntryLog{}
 	identityMw := middlewares.Identity{KratosClient: k}
@@ -40,6 +53,7 @@ func main() {
 	r.Handle("/dashboard", protectedSites.Dashboard)
 
 	r.HandleFunc("/auth/login", userC.GetLogin).Methods("GET")
+	r.HandleFunc("/auth/hydra/login", userC.GetHydraLogin).Methods("GET")
 	r.HandleFunc("/auth/registration", userC.GetRegistration).Methods("GET")
 
 	fmt.Println("Listening at port 4435 ...")

@@ -1,10 +1,14 @@
 package controllers
 
 import (
+	"fmt"
+	"log"
 	"net/http"
 
 	"github.com/monkjunior/poc-kratos-hydra/kratos"
 	"github.com/monkjunior/poc-kratos-hydra/views"
+	hydraSDK "github.com/ory/hydra-client-go/client"
+	hydraAdmin "github.com/ory/hydra-client-go/client/admin"
 	kratosClient "github.com/ory/kratos-client-go"
 )
 
@@ -13,11 +17,13 @@ var (
 	KratosPublicBaseURL = "http://127.0.0.1:4455/.ory/kratos/public"
 )
 
-func NewUsers(k *kratosClient.APIClient) *Users {
+func NewUsers(k *kratosClient.APIClient, hCli *hydraSDK.OryHydra, hAdm *hydraSDK.OryHydra) *Users {
 	return &Users{
 		LoginView:        views.NewView("bootstrap", "login"),
 		RegistrationView: views.NewView("bootstrap", "registration"),
 		kratosClient:     k,
+		hydraClient:      hCli,
+		hydraAdmin:       hAdm,
 	}
 }
 
@@ -25,6 +31,8 @@ type Users struct {
 	LoginView        *views.View
 	RegistrationView *views.View
 	kratosClient     *kratosClient.APIClient
+	hydraClient      *hydraSDK.OryHydra
+	hydraAdmin       *hydraSDK.OryHydra
 }
 
 // LoginForm stores data for rendering Login form and submit a Login flow
@@ -63,6 +71,25 @@ func (u *Users) GetLogin(w http.ResponseWriter, r *http.Request) {
 		},
 	}
 	u.LoginView.Render(w, r, data)
+}
+
+// GetHydraLogin
+// GET /auth/hydra/login
+func (u *Users) GetHydraLogin(w http.ResponseWriter, r *http.Request) {
+	loginChallenge := r.URL.Query().Get("login_challenge")
+	if loginChallenge == "" {
+		http.Error(w, "Missing login_challenge parameter", http.StatusForbidden)
+		return
+	}
+	params := hydraAdmin.NewGetLoginRequestParams()
+	params.LoginChallenge = loginChallenge
+	isOK, err := u.hydraAdmin.Admin.GetLoginRequest(params)
+	if err != nil || isOK == nil {
+		log.Println(err)
+		http.Error(w, "Something went wrong", http.StatusInternalServerError)
+		return
+	}
+	fmt.Fprintln(w, isOK.GetPayload(), http.StatusOK)
 }
 
 // RegistrationForm stores data for rendering Registration form and submit a Registration flow
