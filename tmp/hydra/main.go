@@ -1,11 +1,9 @@
 package main
 
 import (
-	"context"
 	"fmt"
-	"golang.org/x/oauth2"
 
-	oidc "github.com/coreos/go-oidc"
+	"golang.org/x/oauth2"
 )
 
 func main() {
@@ -35,13 +33,7 @@ func main() {
 	//
 	// Init an OIDC authorization code flow
 	// Should not use their own implementation
-	// Use github.com/coreos/go-oidc package instead
-	ctx := context.Background()
-	provider, err := oidc.NewProvider(ctx, "http://127.0.0.1:4444/")
-	if err != nil {
-		panic(err)
-	}
-	fmt.Printf("%+v\n", provider.Endpoint())
+	// Use "golang.org/x/oauth2" package instead
 
 	oauth2Config := oauth2.Config{
 		ClientID:     "auth-code-client",
@@ -49,10 +41,13 @@ func main() {
 		RedirectURL:  "http://127.0.0.1:4455/callback",
 
 		// Discovery returns the OAuth2 endpoints.
-		Endpoint: provider.Endpoint(),
+		Endpoint: oauth2.Endpoint{
+			AuthURL: "http://127.0.0.1:4444/oauth2/auth",
+			TokenURL: "http://127.0.0.1:4444/oauth2/token",
+		},
 
 		// "openid" is a required scope for OpenID Connect flows.
-		Scopes: []string{oidc.ScopeOpenID},
+		Scopes: []string{"openid"},
 	}
 
 	url := oauth2Config.AuthCodeURL("a-random-string-for-state")
