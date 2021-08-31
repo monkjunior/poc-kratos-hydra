@@ -55,6 +55,10 @@ Golang client package:
 
 - [Kratos](https://pkg.go.dev/github.com/ory/kratos-client-go)
 
+- [Hydra golang SDK](https://www.ory.sh/hydra/docs/sdk/go/)
+
+- Enable OpenID connect support for `golang.org/x/oauth2` by using `github.com/coreos/go-oidc`
+
 Protected endpoints by using OathKeeper, all requests come to these APIs must be authenticated.
 
 - [Zero Trust With IAP proxy](https://www.ory.sh/kratos/docs/guides/zero-trust-iap-proxy-identity-access-proxy/)
