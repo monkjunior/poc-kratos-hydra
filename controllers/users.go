@@ -85,11 +85,40 @@ func (u *Users) GetHydraLogin(w http.ResponseWriter, r *http.Request) {
 	params.LoginChallenge = loginChallenge
 	isOK, err := u.hydraAdmin.Admin.GetLoginRequest(params)
 	if err != nil || isOK == nil {
-		log.Println(err)
+		log.Println("Failed to get hydra login request", err)
 		http.Error(w, "Something went wrong", http.StatusInternalServerError)
 		return
 	}
-	fmt.Fprintln(w, isOK.GetPayload(), http.StatusOK)
+	payload := isOK.GetPayload()
+	if *payload.Skip {
+		fmt.Fprintln(w, "Skip is true, we should accept this login request from Hydra", http.StatusOK)
+		return
+	}
+
+	hydraLoginState := r.URL.Query().Get("state")
+	if hydraLoginState == "" {
+		fmt.Fprintln(w, "Got empty hydra login state, we should redirect to login page", http.StatusOK)
+		return
+	}
+
+	kratosSessionCookie, err := r.Cookie("ory_kratos_session")
+	if err != nil {
+		log.Println("Failed to get ory_kratos_session")
+		http.Error(w, "Something went wrong", http.StatusInternalServerError)
+		return
+	}
+	if kratosSessionCookie.Value == "" {
+		fmt.Fprintln(w, "No kratos login session was set, we should redirect to login page", http.StatusOK)
+		return
+	}
+
+	// TODO: How to validate hydraLoginState
+	if hydraLoginState != payload.SessionID {
+		fmt.Fprintln(w, "Mismatch hydra login state, we should redirect to login page", http.StatusOK)
+		return
+	}
+
+	fmt.Fprintln(w, "Now you should figure out the user and accept login request", http.StatusOK)
 }
 
 // RegistrationForm stores data for rendering Registration form and submit a Registration flow
