@@ -130,7 +130,19 @@ func (u *Users) GetHydraLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fmt.Fprintln(w, "Now you should figure out the user and accept login request", http.StatusOK)
+	session, res, err := u.kratosClient.V0alpha1Api.ToSession(r.Context()).Cookie(r.Header.Get("Cookie")).Execute()
+	if err != nil || res == nil || res.StatusCode != http.StatusOK {
+		log.Println("You did not log in")
+		redirectToLogin(w, r)
+		return
+	}
+
+	fmt.Fprintf(w, `Info of logged in user
+UserID: %v
+SessionID: %v
+IsActive: %v
+UserInfo %v
+`, session.Identity.GetId(), session.GetId(), session.GetActive(), session.Identity.Traits)
 }
 
 // RegistrationForm stores data for rendering Registration form and submit a Registration flow
