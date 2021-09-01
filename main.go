@@ -44,7 +44,7 @@ func main() {
 	protectedSites := controllers.NewProtectedSites()
 	userC := controllers.NewUsers(k, hCli, hAdm)
 
-	logMw := middlewares.EntryLog{}
+	//logMw := middlewares.EntryLog{}
 	identityMw := middlewares.Identity{KratosClient: k}
 
 	r := mux.NewRouter()
@@ -57,5 +57,5 @@ func main() {
 	r.HandleFunc("/auth/registration", userC.GetRegistration).Methods("GET")
 
 	fmt.Println("Listening at port 4435 ...")
-	log.Fatal(http.ListenAndServe(":4435", logMw.Apply(identityMw.Apply(r))))
+	log.Fatal(http.ListenAndServe(":4435", identityMw.Apply(r)))
 }

@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"github.com/monkjunior/poc-kratos-hydra/rand"
 	"golang.org/x/oauth2"
 )
 
@@ -48,7 +49,7 @@ func main() {
 		// "openid" is a required scope for OpenID Connect flows.
 		Scopes: []string{"openid"},
 	}
-
-	url := oauth2Config.AuthCodeURL("a-random-string-for-state")
-	fmt.Println(url)
+	state, _ := rand.GenerateHydraState()
+	authCodeURL := oauth2Config.AuthCodeURL(state)
+	fmt.Println(authCodeURL)
 }

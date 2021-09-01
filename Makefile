@@ -13,7 +13,7 @@ run-hydra:
 	  up -d --build --force-recreate
 
 create-hydra-client:
-	docker-compose -f hydra-docker-compose.yaml exec hydra hydra clients create \
+	docker-compose exec hydra hydra clients create \
         --endpoint http://127.0.0.1:4445 \
         --id auth-code-client \
         --secret secret \
@@ -26,7 +26,7 @@ clean-hydra:
 	docker-compose -f hydra-docker-compose.yaml \
           rm -s -v -f
 
-run-ui:
+update-ui:
 	docker-compose up -d --build \
       kratos-selfservice-ui-node
 
