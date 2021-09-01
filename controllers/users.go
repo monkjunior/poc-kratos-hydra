@@ -11,6 +11,7 @@ import (
 	"github.com/monkjunior/poc-kratos-hydra/views"
 	hydraSDK "github.com/ory/hydra-client-go/client"
 	hydraAdmin "github.com/ory/hydra-client-go/client/admin"
+	hydraModel "github.com/ory/hydra-client-go/models"
 	kratosClient "github.com/ory/kratos-client-go"
 )
 
@@ -100,7 +101,7 @@ func (u *Users) GetHydraLogin(w http.ResponseWriter, r *http.Request) {
 	}
 
 	state := r.URL.Query().Get("hydra_login_state")
-	log.Println("hydra_login_state=",state)
+	log.Println("hydra_login_state=", state)
 	if state == "" {
 		log.Println("Got empty hydra login state, redirect to login page")
 		redirectToLogin(w, r)
@@ -108,7 +109,7 @@ func (u *Users) GetHydraLogin(w http.ResponseWriter, r *http.Request) {
 	}
 
 	kratosSessionCookie, err := r.Cookie("ory_kratos_session")
-	log.Println("ory_kratos_session=",kratosSessionCookie)
+	log.Println("ory_kratos_session=", kratosSessionCookie)
 	if err != nil {
 		log.Println("Failed to get ory_kratos_session", err)
 		http.Error(w, "Something went wrong", http.StatusInternalServerError)
@@ -131,18 +132,42 @@ func (u *Users) GetHydraLogin(w http.ResponseWriter, r *http.Request) {
 	}
 
 	session, res, err := u.kratosClient.V0alpha1Api.ToSession(r.Context()).Cookie(r.Header.Get("Cookie")).Execute()
-	if err != nil || res == nil || res.StatusCode != http.StatusOK {
+	if err != nil || res == nil || res.StatusCode != http.StatusOK || !session.GetActive() {
 		log.Println("You did not log in")
 		redirectToLogin(w, r)
 		return
 	}
 
-	fmt.Fprintf(w, `Info of logged in user
+	identityID := session.Identity.GetId()
+	identityTraits := session.Identity.Traits
+	sessionID := session.GetId()
+	isSessionActive := session.GetActive()
+
+	log.Printf(`Info of logged in user
 UserID: %v
 SessionID: %v
 IsActive: %v
 UserInfo %v
-`, session.Identity.GetId(), session.GetId(), session.GetActive(), session.Identity.Traits)
+`, identityID, sessionID, isSessionActive, identityTraits)
+
+	loginReqBody := &hydraModel.AcceptLoginRequest{
+		Subject:     &identityID,
+		Remember:    true,
+		RememberFor: 3600,
+	}
+	loginReqParams := &hydraAdmin.AcceptLoginRequestParams{}
+	loginReqParams.WithLoginChallenge(loginChallenge)
+	loginReqParams.WithBody(loginReqBody)
+	loginReqParams.WithContext(r.Context())
+	acceptRes, err := u.hydraAdmin.Admin.AcceptLoginRequest(loginReqParams)
+	if err != nil {
+		log.Println("Failed to accept hydra login request", err)
+		http.Error(w, "Something went wrong", http.StatusInternalServerError)
+		return
+	}
+	fmt.Fprintln(w, "Redirect after accepted hydra login request to ", *acceptRes.Payload.RedirectTo)
+	// TODO: implement callback endpoint before actually redirect client to it
+	//http.Redirect(w, r, *acceptRes.Payload.RedirectTo, http.StatusFound)
 }
 
 // RegistrationForm stores data for rendering Registration form and submit a Registration flow
