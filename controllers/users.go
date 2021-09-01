@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"net/url"
 
-	"github.com/monkjunior/poc-kratos-hydra/context"
 	"github.com/monkjunior/poc-kratos-hydra/kratos"
 	"github.com/monkjunior/poc-kratos-hydra/rand"
 	"github.com/monkjunior/poc-kratos-hydra/views"
@@ -18,6 +17,8 @@ import (
 var (
 	// TODO: this should be moved to kratos package
 	KratosPublicBaseURL = "http://127.0.0.1:4455/.ory/kratos/public"
+
+	hydraLoginState string
 )
 
 func NewUsers(k *kratosClient.APIClient, hCli *hydraSDK.OryHydra, hAdm *hydraSDK.OryHydra) *Users {
@@ -98,9 +99,9 @@ func (u *Users) GetHydraLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	hydraLoginState := r.URL.Query().Get("hydra_login_state")
-	log.Println("hydra_login_state=",hydraLoginState)
-	if hydraLoginState == "" {
+	state := r.URL.Query().Get("hydra_login_state")
+	log.Println("hydra_login_state=",state)
+	if state == "" {
 		log.Println("Got empty hydra login state, redirect to login page")
 		redirectToLogin(w, r)
 		return
@@ -120,12 +121,11 @@ func (u *Users) GetHydraLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// TODO: How to validate OIDC state received from the request
-	log.Println("login_hint ", payload.OidcContext.LoginHint)
-	if hydraLoginState != context.GetHydraLoginState(r.Context()) {
+	// TODO: Need to enhance the way we validate this param to prevent conflicts
+	if state != hydraLoginState {
 		log.Println("Mismatch hydra login state, we should redirect to login page")
-		log.Println("Query param: ", hydraLoginState)
-		log.Println("Value from context ", context.GetHydraLoginState(r.Context()))
+		log.Println("Query param: ", state)
+		log.Println("Session state ", hydraLoginState)
 		http.Error(w, "Something went wrong", http.StatusInternalServerError)
 		return
 	}
@@ -175,18 +175,16 @@ func (u *Users) GetRegistration(w http.ResponseWriter, r *http.Request) {
 
 func redirectToLogin(w http.ResponseWriter, r *http.Request) {
 	state, err := rand.GenerateHydraState()
+	hydraLoginState = state
 	if err != nil {
 		log.Println("Failed to generate hydra state", err)
 		http.Error(w, "Something went wrong", http.StatusInternalServerError)
 		return
 	}
-	ctx := r.Context()
-	context.SetHydraLoginState(ctx, state)
-	r = r.WithContext(ctx)
 
 	v := url.Values{}
 	v.Add("login_challenge", r.URL.Query().Get("login_challenge"))
-	v.Add("hydra_login_state", state)
+	v.Add("hydra_login_state", hydraLoginState)
 	returnToString := "http://127.0.0.1:4455/auth/hydra/login?" + url.QueryEscape(v.Encode())
 	redirectUrl := KratosPublicBaseURL + "/self-service/login/browser?refresh=true&return_to=" + returnToString
 	http.Redirect(w, r, redirectUrl, http.StatusFound)
