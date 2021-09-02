@@ -34,6 +34,7 @@ func main() {
 	r.HandleFunc("/auth/registration", userC.GetRegistration).Methods("GET")
 	r.HandleFunc("/auth/hydra/login", hydraC.GetHydraLogin).Methods("GET")
 	r.HandleFunc("/auth/hydra/consent", hydraC.GetHydraConsent).Methods("GET")
+	r.HandleFunc("/auth/hydra/consent", hydraC.PostHydraConsent).Methods("POST")
 
 	fmt.Println("Listening at port 4435 ...")
 	log.Fatal(http.ListenAndServe(":4435", logMw.Apply(identityMw.Apply(r))))

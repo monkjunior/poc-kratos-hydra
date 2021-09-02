@@ -1,0 +1,31 @@
+{{define "yield"}}
+    <div class="panel panel-default">
+        <div class="panel-body">
+            <h3>Hi <strong>{{.Subject}}</strong></h3>
+        </div>
+        <div class="panel-footer">
+            <h4>application want to access resources on your behalf and to:</h4>
+
+            <form action="/auth/hydra/consent" method="POST">
+                <input type="hidden"  name="consent_challenge" value="{{.ConsentChallenge}}"/>
+
+                <div class="form-group">
+                    <h3>Scopes</h3>
+
+                    {{range .Scopes}}
+                        <div class="checkbox">
+                            <label><input id="{{.}}" type="checkbox" value="{{.}}" name="scopes">{{.}}</label>
+                        </div>
+                    {{end}}
+                </div>
+
+                <div class="checkbox">
+                    <label><input id="remember" type="checkbox" value="1" name="remember">Dont ask me again</label>
+                </div>
+
+                <button id="accept" name="accept" type="submit" class="btn btn-primary" value="allow">Allow access</button>
+                <button id="accept" name="accept" type="submit" class="btn btn-warning" value="deny">Deny access</button>
+            </form>
+        </div>
+    </div>
+{{end}}

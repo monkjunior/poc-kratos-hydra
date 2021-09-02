@@ -5,8 +5,10 @@ import (
 	"log"
 	"net/http"
 	"net/url"
+	"strings"
 
 	"github.com/monkjunior/poc-kratos-hydra/rand"
+	"github.com/monkjunior/poc-kratos-hydra/views"
 	hydraSDK "github.com/ory/hydra-client-go/client"
 	hydraAdmin "github.com/ory/hydra-client-go/client/admin"
 	hydraModel "github.com/ory/hydra-client-go/models"
@@ -19,6 +21,7 @@ var (
 
 func NewHydra(k *kratosClient.APIClient, hCli *hydraSDK.OryHydra, hAdm *hydraSDK.OryHydra) *Hydra {
 	return &Hydra{
+		ConsentView:  views.NewView("bootstrap", "consent"),
 		kratosClient: k,
 		hydraClient:  hCli,
 		hydraAdmin:   hAdm,
@@ -28,6 +31,7 @@ func NewHydra(k *kratosClient.APIClient, hCli *hydraSDK.OryHydra, hAdm *hydraSDK
 // Hydra controller will handler flows relate to Hydra integration: login with Hydra flow, and so on
 // It interacts with Ory Kratos, an opensource Identity Provider, and Ory Hydra, an opensource OAuth2/OIDC provider.
 type Hydra struct {
+	ConsentView  *views.View
 	kratosClient *kratosClient.APIClient
 	hydraClient  *hydraSDK.OryHydra
 	hydraAdmin   *hydraSDK.OryHydra
@@ -124,6 +128,14 @@ UserInfo %v
 	http.Redirect(w, r, *acceptRes.Payload.RedirectTo, http.StatusFound)
 }
 
+type ConsentForm struct {
+	Subject          string
+	ConsentChallenge string   `schema:"consent_challenge"`
+	Scopes           []string `schema:"scopes"`
+	Remember         string   `schema:"remember"`
+	Accept           string   `schema:"accept"`
+}
+
 // GetHydraConsent
 // GET /auth/hydra/consent
 func (h *Hydra) GetHydraConsent(w http.ResponseWriter, r *http.Request) {
@@ -147,12 +159,27 @@ func (h *Hydra) GetHydraConsent(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fmt.Fprintf(w, `
-CSRF Token: let's use package gorilla csrf to protect this form
-Request Scope: %v
-User: %v
-Client: %v
-`, payload.RequestedScope, payload.Subject, payload.Client)
+	data := views.Data{
+		Yield: ConsentForm{
+			Subject:          payload.Subject,
+			ConsentChallenge: consentChallenge,
+			Scopes:           strings.Split(payload.Client.Scope, " "),
+		},
+	}
+	h.ConsentView.Render(w, r, data)
+}
+
+// PostHydraConsent
+// POST /auth/hydra/consent
+func (h *Hydra) PostHydraConsent(w http.ResponseWriter, r *http.Request) {
+	var form ConsentForm
+	if err := parseForm(r, &form); err != nil {
+		log.Println("Could not parse consent form", err)
+		http.Error(w, "Could not parse consent form", http.StatusInternalServerError)
+		return
+	}
+	fmt.Fprintf(w, "Consent form: %+v", form)
+	w.WriteHeader(http.StatusOK)
 }
 
 func redirectToLogin(w http.ResponseWriter, r *http.Request) {
