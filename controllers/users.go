@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"net/url"
 
-	"github.com/monkjunior/poc-kratos-hydra/kratos"
+	"github.com/monkjunior/poc-kratos-hydra/common"
 	"github.com/monkjunior/poc-kratos-hydra/rand"
 	"github.com/monkjunior/poc-kratos-hydra/views"
 	hydraSDK "github.com/ory/hydra-client-go/client"
@@ -16,7 +16,7 @@ import (
 )
 
 var (
-	// TODO: this should be moved to kratos package
+	// TODO: this should be readable from config
 	KratosPublicBaseURL = "http://127.0.0.1:4455/.ory/kratos/public"
 
 	hydraLoginState string
@@ -63,10 +63,10 @@ func (u *Users) GetLogin(w http.ResponseWriter, r *http.Request) {
 	}
 	flowObject, res, err := u.kratosClient.V0alpha1Api.GetSelfServiceLoginFlow(r.Context()).Id(flow).Cookie(r.Header.Get("Cookie")).Execute()
 	if err != nil || res == nil || res.StatusCode != http.StatusOK {
-		kratos.LogOnError(err, res)
+		common.LogOnError(err, res)
 		return
 	}
-	kratos.PrintJSONPretty(flowObject)
+	common.PrintJSONPretty(flowObject)
 	data := views.Data{
 		Yield: RegistrationForm{
 			CsrfToken:    flowObject.Ui.GetNodes()[0].Attributes.UiNodeInputAttributes.Value.(string),
@@ -83,7 +83,8 @@ func (u *Users) GetLogin(w http.ResponseWriter, r *http.Request) {
 func (u *Users) GetHydraLogin(w http.ResponseWriter, r *http.Request) {
 	loginChallenge := r.URL.Query().Get("login_challenge")
 	if loginChallenge == "" {
-		http.Error(w, "Missing login_challenge parameter", http.StatusForbidden)
+		log.Println("Missing login_challenge parameter")
+		redirectToLogin(w, r)
 		return
 	}
 	params := hydraAdmin.NewGetLoginRequestParams()
@@ -91,7 +92,7 @@ func (u *Users) GetHydraLogin(w http.ResponseWriter, r *http.Request) {
 	isOK, err := u.hydraAdmin.Admin.GetLoginRequest(params)
 	if err != nil || isOK == nil {
 		log.Println("Failed to fetch hydra login info with login_challenge =", loginChallenge, err)
-		http.Error(w, "Something went wrong", http.StatusInternalServerError)
+		redirectToLogin(w, r)
 		return
 	}
 	payload := isOK.GetPayload()
@@ -103,7 +104,7 @@ func (u *Users) GetHydraLogin(w http.ResponseWriter, r *http.Request) {
 	state := r.URL.Query().Get("hydra_login_state")
 	log.Println("hydra_login_state=", state)
 	if state == "" {
-		log.Println("Got empty hydra login state, redirect to login page")
+		log.Println("Got empty hydra login state")
 		redirectToLogin(w, r)
 		return
 	}
@@ -112,22 +113,19 @@ func (u *Users) GetHydraLogin(w http.ResponseWriter, r *http.Request) {
 	log.Println("ory_kratos_session=", kratosSessionCookie)
 	if err != nil {
 		log.Println("Failed to get ory_kratos_session", err)
-		http.Error(w, "Something went wrong", http.StatusInternalServerError)
+		redirectToLogin(w, r)
 		return
 	}
 	if kratosSessionCookie.Value == "" {
-		log.Println("No kratos login session was set, we should redirect to login page")
-		http.Error(w, "Something went wrong", http.StatusInternalServerError)
+		log.Println("No kratos login session was set")
 		redirectToLogin(w, r)
 		return
 	}
 
 	// TODO: Need to enhance the way we validate this param to prevent conflicts
 	if state != hydraLoginState {
-		log.Println("Mismatch hydra login state, we should redirect to login page")
-		log.Println("Query param: ", state)
-		log.Println("Session state ", hydraLoginState)
-		http.Error(w, "Something went wrong", http.StatusInternalServerError)
+		log.Println("Mismatch hydra login state")
+		redirectToLogin(w, r)
 		return
 	}
 
@@ -195,7 +193,7 @@ func (u *Users) GetRegistration(w http.ResponseWriter, r *http.Request) {
 	}
 	flowObject, res, err := u.kratosClient.V0alpha1Api.GetSelfServiceRegistrationFlow(r.Context()).Id(flow).Cookie(r.Header.Get("Cookie")).Execute()
 	if err != nil || res == nil || res.StatusCode != http.StatusOK {
-		kratos.LogOnError(err, res)
+		common.LogOnError(err, res)
 		return
 	}
 	//kratos.PrintJSONPretty(flowObject)

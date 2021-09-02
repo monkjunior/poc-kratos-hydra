@@ -1,16 +1,23 @@
-compile:
-	go build -o bin/ory-poc *.go
-
-build:
-	docker-compose build kratos-selfservice-ui-node
-
-run-all:
+start-all:
 	docker-compose \
       up --build  -d
 
-run-hydra:
-	docker-compose -f hydra-docker-compose.yaml \
-	  up -d --build --force-recreate
+stop-all:
+	docker-compose stop
+
+clean-all:
+	docker-compose \
+      rm -s -v -f
+
+compile:
+	go build -o bin/ory-poc *.go
+
+build-ui:
+	docker-compose build kratos-selfservice-ui-node
+
+update-ui:
+	docker-compose up -d --build \
+      kratos-selfservice-ui-node
 
 create-hydra-client:
 	docker-compose exec hydra hydra clients create \
@@ -21,15 +28,3 @@ create-hydra-client:
         --response-types code,id_token \
         --scope openid,offline \
         --callbacks http://127.0.0.1:4455/callback
-
-clean-hydra:
-	docker-compose -f hydra-docker-compose.yaml \
-          rm -s -v -f
-
-update-ui:
-	docker-compose up -d --build \
-      kratos-selfservice-ui-node
-
-clean:
-	docker-compose \
-      rm -s -v -f

@@ -1,4 +1,4 @@
-package kratos
+package common
 
 import (
 	"encoding/json"
