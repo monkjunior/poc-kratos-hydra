@@ -39,7 +39,7 @@ func main() {
 	oauth2Config := oauth2.Config{
 		ClientID:     "auth-code-client",
 		ClientSecret: "secret",
-		RedirectURL:  "http://127.0.0.1:4455/callback",
+		RedirectURL:  "http://127.0.0.1:5555/callback",
 
 		// Discovery returns the OAuth2 endpoints.
 		Endpoint: oauth2.Endpoint{

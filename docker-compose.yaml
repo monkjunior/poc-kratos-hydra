@@ -20,7 +20,7 @@ services:
     volumes:
       - ./config/oathkeeper:/etc/config/oathkeeper
 
-  kratos-selfservice-ui-node:
+  ui-node:
     build:
       context: .
       dockerfile: Dockerfile

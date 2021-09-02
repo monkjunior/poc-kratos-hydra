@@ -13,11 +13,11 @@ compile:
 	go build -o bin/ory-poc *.go
 
 build-ui:
-	docker-compose build kratos-selfservice-ui-node
+	docker-compose build ui-node
 
 update-ui:
 	docker-compose up -d --build \
-      kratos-selfservice-ui-node
+      ui-node
 
 create-hydra-client:
 	docker-compose exec hydra hydra clients create \
@@ -27,4 +27,4 @@ create-hydra-client:
         --grant-types authorization_code,refresh_token \
         --response-types code,id_token \
         --scope openid,offline \
-        --callbacks http://127.0.0.1:4455/callback
+        --callbacks http://127.0.0.1:5555/callback

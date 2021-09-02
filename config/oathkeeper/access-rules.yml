@@ -44,10 +44,10 @@
   mutators:
     - handler: noop
 
-- id: "ory:kratos-selfservice-ui-node:anonymous"
+- id: "ory:ui-node:anonymous"
   upstream:
     preserve_host: true
-    url: "http://kratos-selfservice-ui-node:4435"
+    url: "http://ui-node:4435"
   match:
     url: "http://127.0.0.1:4455/<{error,recovery,verify,auth/*,auth/hydra/*,**.css,**.js}{/,}>"
     methods:
@@ -62,10 +62,10 @@
 
 # Protect APIS that match the config url
 # request will be authenticated using cookie_session authenticator.
-- id: "ory:kratos-selfservice-ui-node:protected"
+- id: "ory:ui-node:protected"
   upstream:
     preserve_host: true
-    url: "http://kratos-selfservice-ui-node:4435"
+    url: "http://ui-node:4435"
   match:
     url: "http://127.0.0.1:4455/<{debug,dashboard,settings}>"
     methods:
@@ -81,10 +81,10 @@
       config:
         to: http://127.0.0.1:4455/auth/login
 
-- id: "ory:kratos-selfservice-ui-node:public"
+- id: "ory:ui-node:public"
   upstream:
     preserve_host: true
-    url: "http://kratos-selfservice-ui-node:4435"
+    url: "http://ui-node:4435"
   match:
     url: "http://127.0.0.1:4455/<{/,}>"
     methods:

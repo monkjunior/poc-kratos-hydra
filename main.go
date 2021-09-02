@@ -30,8 +30,9 @@ func main() {
 	r.Handle("/dashboard", protectedSites.Dashboard)
 
 	r.HandleFunc("/auth/login", userC.GetLogin).Methods("GET")
-	r.HandleFunc("/auth/hydra/login", userC.GetHydraLogin).Methods("GET")
 	r.HandleFunc("/auth/registration", userC.GetRegistration).Methods("GET")
+	r.HandleFunc("/auth/hydra/login", userC.GetHydraLogin).Methods("GET")
+	r.HandleFunc("/auth/hydra/consent", userC.GetHydraConsent).Methods("GET")
 
 	fmt.Println("Listening at port 4435 ...")
 	log.Fatal(http.ListenAndServe(":4435", logMw.Apply(identityMw.Apply(r))))

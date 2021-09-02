@@ -163,9 +163,19 @@ UserInfo %v
 		http.Error(w, "Something went wrong", http.StatusInternalServerError)
 		return
 	}
-	fmt.Fprintln(w, "Redirect after accepted hydra login request to ", *acceptRes.Payload.RedirectTo)
-	// TODO: implement callback endpoint before actually redirect client to it
-	//http.Redirect(w, r, *acceptRes.Payload.RedirectTo, http.StatusFound)
+	http.Redirect(w, r, *acceptRes.Payload.RedirectTo, http.StatusFound)
+}
+
+// GetHydraConsent
+// GET /auth/hydra/consent
+func (u *Users) GetHydraConsent(w http.ResponseWriter, r *http.Request) {
+	consentChallenge := r.URL.Query().Get("consent_challenge")
+	if consentChallenge == "" {
+		fmt.Fprintln(w, "Missing consent_challenge parameter")
+		return
+	}
+	fmt.Fprintln(w, "consent_challenge =", consentChallenge)
+
 }
 
 // RegistrationForm stores data for rendering Registration form and submit a Registration flow
