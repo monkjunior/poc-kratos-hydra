@@ -51,6 +51,9 @@ func (h *Hydra) GetHydraLogin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	payload := isOK.GetPayload()
+
+	// TODO: need to handle this case
+	// skip is true often happens when your session is still valid after a previous succeed login challenge
 	if *payload.Skip {
 		fmt.Fprintln(w, "Skip is true, we should accept this login request from Hydra", http.StatusOK)
 		return
@@ -129,8 +132,27 @@ func (h *Hydra) GetHydraConsent(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintln(w, "Missing consent_challenge parameter")
 		return
 	}
-	fmt.Fprintln(w, "consent_challenge =", consentChallenge)
 
+	params := hydraAdmin.NewGetConsentRequestParams()
+	params.ConsentChallenge = consentChallenge
+	isOK, err := h.hydraAdmin.Admin.GetConsentRequest(params)
+	if err != nil || isOK == nil {
+		log.Println("Failed to fetch hydra consent info with consent_challenge =", consentChallenge, err)
+		fmt.Fprintln(w, "Failed to fetch consent info")
+		return
+	}
+	payload := isOK.GetPayload()
+	if payload.Skip {
+		fmt.Fprintln(w, "Skip is true, we should accept this consent request", http.StatusOK)
+		return
+	}
+
+	fmt.Fprintf(w, `
+CSRF Token: let's use package gorilla csrf to protect this form
+Request Scope: %v
+User: %v
+Client: %v
+`, payload.RequestedScope, payload.Subject, payload.Client)
 }
 
 func redirectToLogin(w http.ResponseWriter, r *http.Request) {
