@@ -132,7 +132,7 @@ type ConsentForm struct {
 	Subject          string
 	ConsentChallenge string   `schema:"consent_challenge"`
 	Scopes           []string `schema:"scopes"`
-	Remember         string   `schema:"remember"`
+	Remember         bool     `schema:"remember"`
 	Accept           string   `schema:"accept"`
 }
 
@@ -178,8 +178,38 @@ func (h *Hydra) PostHydraConsent(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Could not parse consent form", http.StatusInternalServerError)
 		return
 	}
-	fmt.Fprintf(w, "Consent form: %+v", form)
-	w.WriteHeader(http.StatusOK)
+	//fmt.Fprintf(w, "Consent form: %+v", form)
+	if form.Accept == "deny" {
+		//TODO: reject consent request
+		return
+	}
+	params := hydraAdmin.NewGetConsentRequestParams()
+	params.ConsentChallenge = form.ConsentChallenge
+	isOK, err := h.hydraAdmin.Admin.GetConsentRequest(params)
+	if err != nil || isOK == nil {
+		log.Println("Failed to fetch hydra consent info with consent_challenge =", form.ConsentChallenge, err)
+		fmt.Fprintln(w, "Failed to fetch consent info")
+		return
+	}
+	payload := isOK.GetPayload()
+
+	consentParams := &hydraAdmin.AcceptConsentRequestParams{
+		ConsentChallenge: form.ConsentChallenge,
+		Body: &hydraModel.AcceptConsentRequest{
+			GrantScope:               form.Scopes,
+			GrantAccessTokenAudience: payload.RequestedAccessTokenAudience,
+			Remember:                 form.Remember,
+			RememberFor:              3600,
+		},
+		Context: r.Context(),
+	}
+	consentOK, err := h.hydraAdmin.Admin.AcceptConsentRequest(consentParams)
+	if err != nil {
+		log.Println("Could not accept consent challenge ", err)
+		http.Error(w, "Some thing went wrong", http.StatusInternalServerError)
+		return
+	}
+	http.Redirect(w, r, *consentOK.Payload.RedirectTo, http.StatusFound)
 }
 
 func redirectToLogin(w http.ResponseWriter, r *http.Request) {
