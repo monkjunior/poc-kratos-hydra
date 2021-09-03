@@ -178,9 +178,26 @@ func (h *Hydra) PostHydraConsent(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Could not parse consent form", http.StatusInternalServerError)
 		return
 	}
-	//fmt.Fprintf(w, "Consent form: %+v", form)
+	log.Printf("Consent form: %+v\n", form)
 	if form.Accept == "deny" {
-		//TODO: reject consent request
+		consentParams := &hydraAdmin.RejectConsentRequestParams{
+			Context: r.Context(),
+			ConsentChallenge: form.ConsentChallenge,
+			Body: &hydraModel.RejectRequest{
+				Error: "User denied access",
+				ErrorDescription: "Put some description about the error later!",
+				ErrorHint: "Error hint: ...",
+				ErrorDebug: "Error debug: ...",
+				StatusCode: 0,
+			},
+		}
+		rejectOK, err := h.hydraAdmin.Admin.RejectConsentRequest(consentParams)
+		if err != nil {
+			log.Println("Could not reject consent request ", err)
+			http.Error(w, "Some thing went wrong", http.StatusInternalServerError)
+			return
+		}
+		http.Redirect(w, r, *rejectOK.Payload.RedirectTo, http.StatusFound)
 		return
 	}
 	params := hydraAdmin.NewGetConsentRequestParams()
@@ -188,7 +205,7 @@ func (h *Hydra) PostHydraConsent(w http.ResponseWriter, r *http.Request) {
 	isOK, err := h.hydraAdmin.Admin.GetConsentRequest(params)
 	if err != nil || isOK == nil {
 		log.Println("Failed to fetch hydra consent info with consent_challenge =", form.ConsentChallenge, err)
-		fmt.Fprintln(w, "Failed to fetch consent info")
+		http.Error(w, "Some thing went wrong", http.StatusInternalServerError)
 		return
 	}
 	payload := isOK.GetPayload()
