@@ -128,7 +128,9 @@ UserInfo %v
 	http.Redirect(w, r, *acceptRes.Payload.RedirectTo, http.StatusFound)
 }
 
+// ConsentForm stores consent form data to render consent page
 type ConsentForm struct {
+	// TODO: implement csrf protection using gorilla csrf
 	Subject          string
 	ConsentChallenge string   `schema:"consent_challenge"`
 	Scopes           []string `schema:"scopes"`

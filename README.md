@@ -1,41 +1,36 @@
 # Proof of concept for integration between kratos and hydra
 
-In this example, all flows are server-side rendering types. Other types will be implemented later if needed.
-
-There are 3 stages:
-
-- Initialization and redirect to UI;
-
-- Form rendering;
-
-- Form submission and payload validation.
-
 ## Run this POC
 
-Run example:
+Start docker-compose stack
 ```bash
-$ make run-all
+$ make start-all
 ```
 
-The UI will be served at `http://127.0.0.1:4455/`
+A login and consent app will be served at `http://127.0.0.1:4455/`
+
+Create the first Hydra client
+```bash
+$ make create-hydra-client
+```
+
+Start an exemplary client to perform OAuth2 Authorization Code flow.
+```bash
+$ make create-hydra-client
+```
+Visit the client at `http://127.0.0.1:5555`
+
+Rebuild and update UI service:
+```bash
+$ make update-ui
+```
 
 Clean example:
 ```bash
-$ make clean
+$ make clean-all
 ```
 
-Restart UI service:
-```bash
-$ make run
-```
-
-## Registration flow
-
-[API Flow Golang example](https://www.ory.sh/kratos/docs/next/self-service/flows/user-registration/#registration-with-usernameemail-and-password-1)
-
-## Login flow
-
-## Logout flow
+# My personal docs for this example
 
 ## OIDC and Hydra
 

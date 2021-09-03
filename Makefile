@@ -12,9 +12,6 @@ clean-all:
 compile:
 	go build -o bin/ory-poc *.go
 
-build-ui:
-	docker-compose build ui-node
-
 update-ui:
 	docker-compose up -d --build \
       ui-node
