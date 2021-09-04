@@ -68,6 +68,7 @@ services:
     image: oryd/hydra:v1.10.6
     depends_on:
       - hydra-migrate
+      - jaeger
     ports:
       - "4444:4444" # Public port
       - "4445:4445" # Admin port
@@ -86,6 +87,13 @@ services:
       - OIDC_SUBJECT_IDENTIFIERS_SUPPORTED_TYPES=public,pairwise
       - OIDC_SUBJECT_IDENTIFIERS_PAIRWISE_SALT=youReallyNeedToChangeThis
       - DSN=postgres://hydra:secret@postgres_hydra:5432/hydra?sslmode=disable&max_conns=20&max_idle_conns=4
+      ### Jaeger ###
+      # Instruction: https://www.ory.sh/hydra/docs/guides/tracing/ #
+      - TRACING_PROVIDER=jaeger
+      - TRACING_PROVIDERS_JAEGER_SAMPLING_SERVER_URL=http://jaeger:5778/sampling
+      - TRACING_PROVIDERS_JAEGER_LOCAL_AGENT_ADDRESS=jaeger:6831
+      - TRACING_PROVIDERS_JAEGER_SAMPLING_TYPE=const
+      - TRACING_PROVIDERS_JAEGER_SAMPLING_VALUE=1
     networks:
       - intranet
 
@@ -127,6 +135,13 @@ services:
     ports:
       - '4436:4436'
       - '4437:4437'
+    networks:
+      - intranet
+  # Tracing tool for Hydra
+  jaeger:
+    image: jaegertracing/all-in-one:1.19.2
+    ports:
+      - "16686:16686" # The UI port
     networks:
       - intranet
 

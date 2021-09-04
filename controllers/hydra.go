@@ -83,7 +83,6 @@ func (h *Hydra) GetHydraLogin(w http.ResponseWriter, r *http.Request) {
 		redirectToLogin(w, r)
 		return
 	}
-
 	// TODO: Need to enhance the way we validate this param to prevent conflicts
 	if state != hydraLoginState {
 		log.Println("Mismatch hydra login state")
