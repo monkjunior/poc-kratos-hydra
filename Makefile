@@ -34,4 +34,5 @@ examine-authorization-code:
 		--client-secret secret \
 		--endpoint http://127.0.0.1:4444/ \
 		--port 5555 \
-		--scope openid,offline
+		--scope openid,offline \
+		--no-shutdown
