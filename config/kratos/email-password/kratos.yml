@@ -16,6 +16,11 @@ selfservice:
     - http://127.0.0.1:4455
 
   methods:
+    # link:
+    #   enabled: true
+    #   config:
+    #     # Defines how long a recovery link is valid for (default 1h)
+    #     lifespan: 15m
     password:
       enabled: true
 
@@ -51,8 +56,11 @@ selfservice:
       after:
         password:
           hooks:
-            -
-              hook: session
+            # Adding the session hook signs the user immediately in once the account has been created.
+            # It runs after the identity has been saved to the database.
+            # More details: https://www.ory.sh/kratos/docs/next/self-service/hooks/#session
+            - hook: session
+            # Hook "session" can not be configured
 
 log:
   level: debug

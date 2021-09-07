@@ -16,7 +16,7 @@ $ make create-hydra-client
 
 Start an exemplary client to perform OAuth2 Authorization Code flow.
 ```bash
-$ make create-hydra-client
+$ make examine-authorization-code
 ```
 Visit the client at `http://127.0.0.1:5555`
 
