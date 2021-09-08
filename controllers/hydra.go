@@ -8,10 +8,12 @@ import (
 
 	"github.com/monkjunior/poc-kratos-hydra/rand"
 	"github.com/monkjunior/poc-kratos-hydra/views"
+
 	hydraSDK "github.com/ory/hydra-client-go/client"
 	hydraAdmin "github.com/ory/hydra-client-go/client/admin"
 	hydraModel "github.com/ory/hydra-client-go/models"
 	kratosClient "github.com/ory/kratos-client-go"
+	"golang.org/x/oauth2"
 )
 
 var (
@@ -263,4 +265,24 @@ func redirectToLogin(w http.ResponseWriter, r *http.Request) {
 	returnToString := "http://127.0.0.1:4455/auth/hydra/login?" + url.QueryEscape(v.Encode())
 	redirectUrl := KratosPublicBaseURL + "/self-service/login/browser?refresh=true&return_to=" + returnToString
 	http.Redirect(w, r, redirectUrl, http.StatusFound)
+}
+
+func generateAuthCodeURL() (string, string) {
+	oauth2Config := oauth2.Config{
+		ClientID:     "kratos-client",
+		ClientSecret: "secret",
+		RedirectURL:  "http://127.0.0.1:4455/callback",
+
+		// Discovery returns the OAuth2 endpoints.
+		Endpoint: oauth2.Endpoint{
+			AuthURL:  "http://127.0.0.1:4444/oauth2/auth",
+			TokenURL: "http://127.0.0.1:4444/oauth2/token",
+		},
+
+		// "openid" is a required scope for OpenID Connect flows.
+		Scopes: []string{"openid"},
+	}
+	state, _ := rand.GenerateHydraState()
+	authCodeURL := oauth2Config.AuthCodeURL(state)
+	return authCodeURL, state
 }

@@ -11,6 +11,9 @@ import (
 var (
 	// TODO: this should be readable from config
 	KratosPublicBaseURL = "http://127.0.0.1:4455/.ory/kratos/public"
+
+	hydraLoginURL string
+	oauthState    string
 )
 
 func NewUsers(k *kratosClient.APIClient) *Users {
@@ -46,6 +49,7 @@ type LoginForm struct {
 //
 // GET /auth/login/?flow=<flow_id>
 func (u *Users) GetLogin(w http.ResponseWriter, r *http.Request) {
+	// TODO: logging
 	flow := r.URL.Query().Get("flow")
 	if flow == "" {
 		http.Redirect(w, r, KratosPublicBaseURL+"/self-service/login/browser", http.StatusFound)
@@ -53,17 +57,17 @@ func (u *Users) GetLogin(w http.ResponseWriter, r *http.Request) {
 	}
 	flowObject, res, err := u.kratosClient.V0alpha1Api.GetSelfServiceLoginFlow(r.Context()).Id(flow).Cookie(r.Header.Get("Cookie")).Execute()
 	if err != nil || res == nil || res.StatusCode != http.StatusOK {
-		common.LogOnError(err, res)
+		// TODO: handle error when received wrong flow id, should create a new flow
 		return
 	}
-	common.PrintJSONPretty(flowObject)
+	hydraLoginURL, oauthState = generateAuthCodeURL()
 	data := views.Data{
 		Yield: LoginForm{
 			CsrfToken:     flowObject.Ui.GetNodes()[0].Attributes.UiNodeInputAttributes.Value.(string),
 			FlowID:        flow,
 			SubmitMethod:  flowObject.Ui.Method,
 			Action:        flowObject.Ui.Action,
-			HydraLoginURL: "generate hydra login URL here",
+			HydraLoginURL: hydraLoginURL,
 		},
 	}
 	u.LoginView.Render(w, r, data)

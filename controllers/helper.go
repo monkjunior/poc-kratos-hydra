@@ -7,20 +7,6 @@ import (
 	"github.com/gorilla/schema"
 )
 
-// parseURLParams populates r.Form
-//
-// For all requests, ParseForm parses the raw query from the URL and updates
-// r.Form.
-//
-// Eg:
-// GET /signup?name=Hoan%20Beo&email=hoantranbk@gmail.com
-func parseURLParams(r *http.Request, dst interface{}) error {
-	if err := r.ParseForm(); err != nil {
-		return err
-	}
-	return parseValues(r.Form, dst)
-}
-
 // parseForm populates r.PostForm
 //
 // For all POST requests, ParseForm parses the raw data form from the request and updates
