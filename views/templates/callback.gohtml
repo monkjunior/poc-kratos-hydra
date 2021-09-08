@@ -1,10 +1,10 @@
 {{define "yield"}}
-    {{if .Error }}
+    {{with .Error }}
         <h2>An error occurred</h2>
-        <h3>{{ .Error.Name }}</h3>
-        <p>{{ .Error.Description }}</p>
-        <p>{{ .Error.Hint }}</p>
-        <p>{{ .Error.Debug }}</p>
+        <h3>{{ .Name }}</h3>
+        <p>{{ .Description }}</p>
+        <p>{{ .Hint }}</p>
+        <p>{{ .Debug }}</p>
     {{else}}
         <ul>
             <li>Access Token: <code>{{ .AccessToken }}</code></li>

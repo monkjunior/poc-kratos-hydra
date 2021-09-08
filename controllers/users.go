@@ -120,7 +120,7 @@ func (u *Users) GetRegistration(w http.ResponseWriter, r *http.Request) {
 
 // CallbackForm stores result token after OAuth flow
 type CallbackForm struct {
-	Error        CallbackError
+	Error        *CallbackError
 	AccessToken  string
 	RefreshToken string
 	Expiry       string
@@ -141,7 +141,7 @@ func (u *Users) GetCallback(w http.ResponseWriter, r *http.Request) {
 	if len(r.URL.Query().Get("error")) > 0 {
 		data := views.Data{
 			Yield: CallbackForm{
-				Error: CallbackError{
+				Error: &CallbackError{
 					Name:        r.URL.Query().Get("error"),
 					Description: r.URL.Query().Get("error_description"),
 					Hint:        r.URL.Query().Get("error_hint"),
@@ -158,7 +158,7 @@ func (u *Users) GetCallback(w http.ResponseWriter, r *http.Request) {
 	if !isStatesMatched {
 		data := views.Data{
 			Yield: CallbackForm{
-				Error: CallbackError{
+				Error: &CallbackError{
 					Name:        "States does not match",
 					Description: "Expect A but received B",
 				},
@@ -173,7 +173,7 @@ func (u *Users) GetCallback(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		data := views.Data{
 			Yield: CallbackForm{
-				Error: CallbackError{
+				Error: &CallbackError{
 					Name:        "Failed to exchange token",
 					Description: err.Error(),
 				},
