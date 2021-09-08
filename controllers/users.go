@@ -31,12 +31,13 @@ type Users struct {
 
 // LoginForm stores data for rendering Login form and submit a Login flow
 type LoginForm struct {
-	SubmitMethod string
-	Action       string
-	CsrfToken    string `schema:"csrf_token"`
-	FlowID       string
-	Email        string `schema:"password_identifier"`
-	Password     string `schema:"password"`
+	SubmitMethod  string
+	Action        string
+	CsrfToken     string `schema:"csrf_token"`
+	FlowID        string
+	Email         string `schema:"password_identifier"`
+	Password      string `schema:"password"`
+	HydraLoginURL string
 }
 
 // GetLogin requires flow params, if the flow is not set, it will redirect to Kratos to browse a new one.
@@ -57,11 +58,12 @@ func (u *Users) GetLogin(w http.ResponseWriter, r *http.Request) {
 	}
 	common.PrintJSONPretty(flowObject)
 	data := views.Data{
-		Yield: RegistrationForm{
-			CsrfToken:    flowObject.Ui.GetNodes()[0].Attributes.UiNodeInputAttributes.Value.(string),
-			FlowID:       flow,
-			SubmitMethod: flowObject.Ui.Method,
-			Action:       flowObject.Ui.Action,
+		Yield: LoginForm{
+			CsrfToken:     flowObject.Ui.GetNodes()[0].Attributes.UiNodeInputAttributes.Value.(string),
+			FlowID:        flow,
+			SubmitMethod:  flowObject.Ui.Method,
+			Action:        flowObject.Ui.Action,
+			HydraLoginURL: "generate hydra login URL here",
 		},
 	}
 	u.LoginView.Render(w, r, data)
