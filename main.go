@@ -5,9 +5,10 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/gorilla/mux"
 	"github.com/monkjunior/poc-kratos-hydra/controllers"
 	"github.com/monkjunior/poc-kratos-hydra/middlewares"
+
+	"github.com/gorilla/mux"
 	hydraSDK "github.com/ory/hydra-client-go/client"
 	kratosSDK "github.com/ory/kratos-client-go"
 )
@@ -30,6 +31,7 @@ func main() {
 	r.Handle("/", publicSites.Home)
 	r.Handle("/dashboard", protectedSites.Dashboard)
 
+	r.HandleFunc("/callback", userC.GetCallback).Methods("GET")
 	r.HandleFunc("/auth/login", userC.GetLogin).Methods("GET")
 	r.HandleFunc("/auth/registration", userC.GetRegistration).Methods("GET")
 	r.HandleFunc("/auth/hydra/login", hydraC.GetHydraLogin).Methods("GET")

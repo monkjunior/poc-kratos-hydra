@@ -49,7 +49,7 @@
     preserve_host: true
     url: "http://ui-node:4435"
   match:
-    url: "http://127.0.0.1:4455/<{error,recovery,verify,auth/*,auth/hydra/*,**.css,**.js}{/,}>"
+    url: "http://127.0.0.1:4455/<{error,recovery,verify,callback,auth/*,auth/hydra/*,**.css,**.js}{/,}>"
     methods:
       - GET
       - POST

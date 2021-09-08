@@ -1,7 +1,9 @@
 package controllers
 
 import (
+	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/monkjunior/poc-kratos-hydra/common"
 	"github.com/monkjunior/poc-kratos-hydra/views"
@@ -13,13 +15,14 @@ var (
 	KratosPublicBaseURL = "http://127.0.0.1:4455/.ory/kratos/public"
 
 	hydraLoginURL string
-	oauthState    string
+	oauthState    string //TODO: this is just for test, need to reimplement the way we validate oauthState
 )
 
 func NewUsers(k *kratosClient.APIClient) *Users {
 	return &Users{
 		LoginView:        views.NewView("bootstrap", "login"),
 		RegistrationView: views.NewView("bootstrap", "registration"),
+		CallbackView:     views.NewView("bootstrap", "callback"),
 		kratosClient:     k,
 	}
 }
@@ -29,6 +32,7 @@ func NewUsers(k *kratosClient.APIClient) *Users {
 type Users struct {
 	LoginView        *views.View
 	RegistrationView *views.View
+	CallbackView     *views.View
 	kratosClient     *kratosClient.APIClient
 }
 
@@ -60,6 +64,7 @@ func (u *Users) GetLogin(w http.ResponseWriter, r *http.Request) {
 		// TODO: handle error when received wrong flow id, should create a new flow
 		return
 	}
+	// TODO: need to reimplement this, currently cannot validate oauthState
 	hydraLoginURL, oauthState = generateAuthCodeURL()
 	data := views.Data{
 		Yield: LoginForm{
@@ -111,4 +116,41 @@ func (u *Users) GetRegistration(w http.ResponseWriter, r *http.Request) {
 		},
 	}
 	u.RegistrationView.Render(w, r, data)
+}
+
+// CallbackForm stores result token after OAuth flow
+type CallbackForm struct {
+	AccessToken  string
+	RefreshToken string
+	Expiry       string
+	IDToken      string
+}
+
+// GetCallback receive authorization code and exchange token with Hydra, our OAuth2.0/OIDC server
+// then it render token, and other result to viewer.
+// GET /callback
+func (u *Users) GetCallback(w http.ResponseWriter, r *http.Request) {
+	if len(r.URL.Query().Get("error")) == 0 {
+		// TODO: validate if states is matched
+		if true {
+			code := r.URL.Query().Get("code")
+			token, err := exchangeToken(r.Context(), code)
+			if err == nil {
+				idt := token.Extra("id_token")
+				data := views.Data{
+					Yield: CallbackForm{
+						AccessToken:  token.AccessToken,
+						RefreshToken: token.RefreshToken,
+						Expiry:       token.Expiry.Format(time.RFC1123),
+						IDToken:      fmt.Sprintf("%v", idt),
+					},
+				}
+				u.CallbackView.Render(w, r, data)
+				return
+			}
+			fmt.Fprintln(w, "EXCHANGE TOKEN FAILED", err.Error())
+			return
+		}
+	}
+	fmt.Fprintln(w, "GOT ERROR")
 }

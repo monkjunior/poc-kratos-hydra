@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"context"
 	"log"
 	"net/http"
 	"net/url"
@@ -285,4 +286,22 @@ func generateAuthCodeURL() (string, string) {
 	state, _ := rand.GenerateHydraState()
 	authCodeURL := oauth2Config.AuthCodeURL(state)
 	return authCodeURL, state
+}
+
+func exchangeToken(ctx context.Context, code string) (*oauth2.Token, error) {
+	oauth2Config := oauth2.Config{
+		ClientID:     "kratos-client",
+		ClientSecret: "secret",
+		RedirectURL:  "http://127.0.0.1:4455/callback",
+
+		// Discovery returns the OAuth2 endpoints.
+		Endpoint: oauth2.Endpoint{
+			AuthURL:  "http://hydra:4444/oauth2/auth",
+			TokenURL: "http://hydra:4444/oauth2/token",
+		},
+
+		// "openid" is a required scope for OpenID Connect flows.
+		Scopes: []string{"openid"},
+	}
+	return oauth2Config.Exchange(ctx, code)
 }
