@@ -88,3 +88,15 @@ identity:
 courier:
   smtp:
     connection_uri: smtps://test:test@mailslurper:1025/?skip_ssl_verify=true&legacy_ssl=true
+
+# Distributed tracing: https://www.ory.sh/kratos/docs/guides/tracing
+#tracing:
+#  provider: jaeger
+#  providers:
+#    jaeger:
+#      sampling:
+#        server_url: "http://jaeger:5778/sampling"
+#        type: const
+#        value: 1
+#      local_agent_address: jaeger:6831
+#  service_name: kratos
