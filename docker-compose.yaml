@@ -27,7 +27,7 @@ services:
     expose:
       - 4435
     command:
-      ory-poc
+      ory-poc -prod
     networks:
       - intranet
 

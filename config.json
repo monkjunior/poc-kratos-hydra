@@ -1,0 +1,21 @@
+{
+  "env": "production",
+  "kratos": {
+    "host": "oathkeeper:4455",
+    "scheme": "http",
+    "debug": true,
+    "public_base_path": "/.ory/kratos/public"
+  },
+  "hydra": {
+    "public": {
+      "host": "hydra:4444",
+      "schemes": ["http"],
+      "base_path": "/"
+    },
+    "admin": {
+      "host": "hydra:4445",
+      "schemes": ["http"],
+      "base_path": "/"
+    }
+  }
+}

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"log"
 	"net/http"
@@ -14,9 +15,12 @@ import (
 )
 
 func main() {
-	k := kratosSDK.NewAPIClient(&CfgKratos)
-	hCli := hydraSDK.NewHTTPClientWithConfig(nil, &ConfigHydraClient)
-	hAdm := hydraSDK.NewHTTPClientWithConfig(nil, &ConfigHydraAdmin)
+	boolPtr := flag.Bool("prod", false, "Set to true in production. This ensures that a config.json file is provided before the application start")
+	flag.Parse()
+	kratosCfg, hPubCfg, hAdmCfg := LoadConfig(*boolPtr)
+	k := kratosSDK.NewAPIClient(&kratosCfg)
+	hCli := hydraSDK.NewHTTPClientWithConfig(nil, &hPubCfg)
+	hAdm := hydraSDK.NewHTTPClientWithConfig(nil, &hAdmCfg)
 
 	publicSites := controllers.NewPublicSites()
 	protectedSites := controllers.NewProtectedSites()
