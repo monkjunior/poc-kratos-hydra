@@ -1,3 +1,4 @@
+version: v0.38.15-beta.1
 # How Oathkeeper forward http requests: https://www.ory.sh/oathkeeper/docs/#decision-engine
 serve:
   proxy:
