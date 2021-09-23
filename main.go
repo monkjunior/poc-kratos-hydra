@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/monkjunior/poc-kratos-hydra/common"
 	"github.com/monkjunior/poc-kratos-hydra/controllers"
 	"github.com/monkjunior/poc-kratos-hydra/middlewares"
 
@@ -15,9 +16,10 @@ import (
 )
 
 func main() {
-	boolPtr := flag.Bool("prod", false, "Set to true in production. This ensures that a config.json file is provided before the application start")
+	boolPtr := flag.Bool("prod", false, "Set to true in production. This ensures that a /etc/config/config.json file is provided before the application start")
 	flag.Parse()
-	kratosCfg, hPubCfg, hAdmCfg := LoadConfig(*boolPtr)
+
+	kratosCfg, hPubCfg, hAdmCfg := common.GetAuthStackCfg(*boolPtr)
 	k := kratosSDK.NewAPIClient(&kratosCfg)
 	hCli := hydraSDK.NewHTTPClientWithConfig(nil, &hPubCfg)
 	hAdm := hydraSDK.NewHTTPClientWithConfig(nil, &hAdmCfg)
@@ -41,6 +43,10 @@ func main() {
 	r.HandleFunc("/auth/hydra/login", hydraC.GetHydraLogin).Methods("GET")
 	r.HandleFunc("/auth/hydra/consent", hydraC.GetHydraConsent).Methods("GET")
 	r.HandleFunc("/auth/hydra/consent", hydraC.PostHydraConsent).Methods("POST")
+
+	// Assets
+	assetsHandler := http.FileServer(http.Dir("./assets/"))
+	r.PathPrefix("/assets/").Handler(http.StripPrefix("/assets/", assetsHandler))
 
 	fmt.Println("Listening at port 4435 ...")
 	log.Fatal(http.ListenAndServe(":4435", logMw.Apply(identityMw.Apply(r))))

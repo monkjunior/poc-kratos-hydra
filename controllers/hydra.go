@@ -7,6 +7,7 @@ import (
 	"net/url"
 	"strings"
 
+	"github.com/monkjunior/poc-kratos-hydra/common"
 	"github.com/monkjunior/poc-kratos-hydra/rand"
 	"github.com/monkjunior/poc-kratos-hydra/views"
 
@@ -264,7 +265,7 @@ func redirectToLogin(w http.ResponseWriter, r *http.Request) {
 	v.Add("login_challenge", r.URL.Query().Get("login_challenge"))
 	v.Add("hydra_login_state", hydraLoginState)
 	returnToString := "http://127.0.0.1:4455/auth/hydra/login?" + url.QueryEscape(v.Encode())
-	redirectUrl := KratosPublicBaseURL + "/self-service/login/browser?refresh=true&return_to=" + returnToString
+	redirectUrl := common.GetKratosPublicBaseURL() + "/self-service/login/browser?refresh=true&return_to=" + returnToString
 	http.Redirect(w, r, redirectUrl, http.StatusFound)
 }
 

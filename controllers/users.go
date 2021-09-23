@@ -11,9 +11,6 @@ import (
 )
 
 var (
-	// TODO: this should be readable from config
-	KratosPublicBaseURL = "http://127.0.0.1:4455/.ory/kratos/public"
-
 	hydraLoginURL string
 	oauthState    string //TODO: this is just for test, need to reimplement the way we validate oauthState
 )
@@ -56,7 +53,7 @@ func (u *Users) GetLogin(w http.ResponseWriter, r *http.Request) {
 	// TODO: logging
 	flow := r.URL.Query().Get("flow")
 	if flow == "" {
-		http.Redirect(w, r, KratosPublicBaseURL+"/self-service/login/browser", http.StatusFound)
+		http.Redirect(w, r, common.GetKratosPublicBaseURL()+"/self-service/login/browser", http.StatusFound)
 		return
 	}
 	flowObject, res, err := u.kratosClient.V0alpha1Api.GetSelfServiceLoginFlow(r.Context()).Id(flow).Cookie(r.Header.Get("Cookie")).Execute()
@@ -98,7 +95,7 @@ type RegistrationForm struct {
 func (u *Users) GetRegistration(w http.ResponseWriter, r *http.Request) {
 	flow := r.URL.Query().Get("flow")
 	if flow == "" {
-		http.Redirect(w, r, KratosPublicBaseURL+"/self-service/registration/browser", http.StatusFound)
+		http.Redirect(w, r, common.GetKratosPublicBaseURL()+"/self-service/registration/browser", http.StatusFound)
 		return
 	}
 	flowObject, res, err := u.kratosClient.V0alpha1Api.GetSelfServiceRegistrationFlow(r.Context()).Id(flow).Cookie(r.Header.Get("Cookie")).Execute()

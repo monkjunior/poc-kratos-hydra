@@ -1,4 +1,4 @@
-package main
+package common
 
 import (
 	"encoding/json"
@@ -11,9 +11,10 @@ import (
 )
 
 type Config struct {
-	Env    string       `json:"env"`
-	Kratos KratosConfig `json:"kratos"`
-	Hydra  HydraConfig  `json:"hydra"`
+	Env     string       `json:"env"`
+	BaseURL string       `json:"base_url"`
+	Kratos  KratosConfig `json:"kratos"`
+	Hydra   HydraConfig  `json:"hydra"`
 }
 
 type KratosConfig struct {
@@ -34,6 +35,7 @@ type HydraTransportConfig struct {
 	Schemes  []string `json:"schemes"`
 }
 
+// DefaultConfig for develop environment
 func DefaultConfig() (kratosSDK.Configuration, hydraSDK.TransportConfig, hydraSDK.TransportConfig) {
 	return kratosSDK.Configuration{
 			Host:   "oathkeeper:4455",
@@ -57,6 +59,8 @@ func DefaultConfig() (kratosSDK.Configuration, hydraSDK.TransportConfig, hydraSD
 		}
 }
 
+// IsProd read the flag -prod value
+// when -prod is set we must read config from file at /etc/config/config.json
 func (c Config) IsProd() bool {
 	env := strings.ToLower(c.Env)
 	if env == "prod" || env == "production" {
@@ -65,23 +69,15 @@ func (c Config) IsProd() bool {
 	return false
 }
 
-func LoadConfig(configReq bool) (kratosSDK.Configuration, hydraSDK.TransportConfig, hydraSDK.TransportConfig) {
+// GetAuthStackCfg read config file at /etc/config/config.json
+// then return clients to interact Kratos public, Hydra public, Hydra admin.
+func GetAuthStackCfg(configReq bool) (kratosSDK.Configuration, hydraSDK.TransportConfig, hydraSDK.TransportConfig) {
 	if !configReq {
+		log.Println("Using default config")
 		return DefaultConfig()
 	}
-	f, err := os.Open("config.json")
-	if err != nil {
-		log.Println(err)
-		panic(err)
-	}
-	var c Config
-	decoder := json.NewDecoder(f)
-	err = decoder.Decode(&c)
-	if err != nil {
-		log.Println(err)
-		panic(err)
-	}
-	log.Println("Successfully loaded config.json file")
+	c := parseConfig()
+	log.Println("Successfully loaded /etc/config/config.json file")
 	return kratosSDK.Configuration{
 			Host:   c.Kratos.Host,
 			Scheme: c.Kratos.Scheme,
@@ -102,4 +98,29 @@ func LoadConfig(configReq bool) (kratosSDK.Configuration, hydraSDK.TransportConf
 			BasePath: c.Hydra.Admin.BasePath,
 			Schemes:  c.Hydra.Admin.Schemes,
 		}
+}
+
+// GetKratosPublicBaseURL read config file at /etc/config/config.json
+// then return public base URL of Kratos.
+func GetKratosPublicBaseURL() string {
+	c := parseConfig()
+	return c.BaseURL + c.Kratos.PublicBasePath
+}
+
+// parseConfig will read the config file at /etc/config/config.json
+// and return the appropriate Config.
+func parseConfig() Config {
+	f, err := os.Open("/etc/config/config.json")
+	if err != nil {
+		log.Println(err)
+		panic(err)
+	}
+	var c Config
+	decoder := json.NewDecoder(f)
+	err = decoder.Decode(&c)
+	if err != nil {
+		log.Println(err)
+		panic(err)
+	}
+	return c
 }
