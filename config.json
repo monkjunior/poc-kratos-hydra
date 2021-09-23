@@ -1,5 +1,6 @@
 {
   "env": "production",
+  "base_url": "http://127.0.0.1:4455",
   "kratos": {
     "host": "oathkeeper:4455",
     "scheme": "http",
