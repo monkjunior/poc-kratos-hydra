@@ -28,6 +28,10 @@ services:
       - 4435
     command:
       ory-poc -prod
+    volumes:
+      - type: bind
+        source: ./config.json
+        target: /etc/config/config.json
     networks:
       - intranet
 
