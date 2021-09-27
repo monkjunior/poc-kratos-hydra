@@ -17,9 +17,9 @@ FROM centos:8
 LABEL org.opencontainers.image.authors="Monk Junior"
 WORKDIR /builder
 
-COPY --from=builder /builder/bin/ory-poc /usr/bin/
+COPY --from=builder /builder/bin/authctl /usr/bin/
 COPY . .
 
 EXPOSE 4435
 
-CMD ["ory-poc"]
+CMD ["authctl", "serve"]

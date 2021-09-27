@@ -5,6 +5,13 @@ import (
 	"net/url"
 
 	"github.com/gorilla/schema"
+	"github.com/spf13/viper"
+)
+
+var (
+	KratosPublicURL                 = viper.GetString("baseUrl") + viper.GetString("kratos.publicBasePath")
+	KratosSSLoginBrowserPath        = "/self-service/login/browser"
+	KratosSSRegistrationBrowserPath = "/self-service/registration/browser"
 )
 
 // parseForm populates r.PostForm

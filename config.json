@@ -1,22 +1,22 @@
 {
   "env": "production",
-  "base_url": "http://127.0.0.1:4455",
+  "baseUrl": "http://127.0.0.1:4455",
   "kratos": {
     "host": "oathkeeper:4455",
     "scheme": "http",
     "debug": true,
-    "public_base_path": "/.ory/kratos/public"
+    "publicBasePath": "/.ory/kratos/public"
   },
   "hydra": {
     "public": {
       "host": "hydra:4444",
       "schemes": ["http"],
-      "base_path": "/"
+      "basePath": "/"
     },
     "admin": {
       "host": "hydra:4445",
       "schemes": ["http"],
-      "base_path": "/"
+      "basePath": "/"
     }
   }
 }
