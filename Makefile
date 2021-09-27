@@ -1,6 +1,7 @@
 start-all:
 	docker-compose \
-      up --build  -d
+      up --build  -d \
+      --remove-orphans
 
 stop-all:
 	docker-compose stop
@@ -14,7 +15,8 @@ compile:
 
 update-ui:
 	docker-compose up -d --build \
-      ui-node
+      ui \
+      authctl
 
 create-hydra-client:
 	docker-compose exec hydra \

@@ -267,7 +267,12 @@ func redirectToLogin(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, redirectUrl, http.StatusFound)
 }
 
+// generateAuthCodeURL generate authentication URL from Hydra client config
+// This function is just used for server-side demo only.
+//
+// Our SPA needs to implement by itself.
 func generateAuthCodeURL() (string, string) {
+	// TODO: need to generate this config from Viper config
 	oauth2Config := oauth2.Config{
 		ClientID:     "kratos-client",
 		ClientSecret: "secret",

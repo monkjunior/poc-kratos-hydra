@@ -20,7 +20,22 @@ services:
     volumes:
       - ./config/oathkeeper:/etc/config/oathkeeper
 
-  ui-node:
+  ui:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    expose:
+      - 4436
+    command:
+      authctl --config /etc/config/config.json mock ui
+    volumes:
+      - type: bind
+        source: ./config.json
+        target: /etc/config/config.json
+    networks:
+      - intranet
+
+  authctl:
     build:
       context: .
       dockerfile: Dockerfile
@@ -28,6 +43,21 @@ services:
       - 4435
     command:
       authctl --config /etc/config/config.json serve
+    volumes:
+      - type: bind
+        source: ./config.json
+        target: /etc/config/config.json
+    networks:
+      - intranet
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    expose:
+      - 4437
+    command:
+      authctl --config /etc/config/config.json mock api
     volumes:
       - type: bind
         source: ./config.json
