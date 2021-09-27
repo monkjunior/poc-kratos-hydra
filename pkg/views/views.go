@@ -2,13 +2,14 @@ package views
 
 import (
 	"bytes"
-	"github.com/monkjunior/poc-kratos-hydra/context"
 	"html/template"
 	"io"
 	"log"
 	"net/http"
 	"path/filepath"
 	"strings"
+
+	"github.com/monkjunior/poc-kratos-hydra/pkg/context"
 )
 
 const (
@@ -16,8 +17,8 @@ const (
 )
 
 var (
-	LayoutDir   = "views/layouts/"
-	TemplateDir = "views/templates/"
+	LayoutDir   = "pkg/views/layouts/"
+	TemplateDir = "pkg/views/templates/"
 	TemplateExt = ".gohtml"
 )
 

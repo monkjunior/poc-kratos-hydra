@@ -7,8 +7,8 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/monkjunior/poc-kratos-hydra/rand"
-	"github.com/monkjunior/poc-kratos-hydra/views"
+	"github.com/monkjunior/poc-kratos-hydra/pkg/rand"
+	"github.com/monkjunior/poc-kratos-hydra/pkg/views"
 	hydraSDK "github.com/ory/hydra-client-go/client"
 	hydraAdmin "github.com/ory/hydra-client-go/client/admin"
 	hydraModel "github.com/ory/hydra-client-go/models"

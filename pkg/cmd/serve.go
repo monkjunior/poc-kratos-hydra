@@ -6,8 +6,8 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
-	"github.com/monkjunior/poc-kratos-hydra/controllers"
-	"github.com/monkjunior/poc-kratos-hydra/middlewares"
+	"github.com/monkjunior/poc-kratos-hydra/pkg/controllers"
+	"github.com/monkjunior/poc-kratos-hydra/pkg/middlewares"
 	hydraSDK "github.com/ory/hydra-client-go/client"
 	kratosSDK "github.com/ory/kratos-client-go"
 	"github.com/spf13/cobra"

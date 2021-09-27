@@ -4,7 +4,7 @@ import (
 	builtInCtx "context"
 	"net/http"
 
-	"github.com/monkjunior/poc-kratos-hydra/context"
+	"github.com/monkjunior/poc-kratos-hydra/pkg/context"
 	kratosClient "github.com/ory/kratos-client-go"
 )
 

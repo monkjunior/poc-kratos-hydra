@@ -5,9 +5,10 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/monkjunior/poc-kratos-hydra/common"
-	"github.com/monkjunior/poc-kratos-hydra/views"
+	"github.com/monkjunior/poc-kratos-hydra/pkg/common"
+	"github.com/monkjunior/poc-kratos-hydra/pkg/views"
 	kratosClient "github.com/ory/kratos-client-go"
+	"github.com/spf13/viper"
 )
 
 var (
@@ -16,6 +17,8 @@ var (
 )
 
 func NewUsers(k *kratosClient.APIClient) *Users {
+	// TODO: need to refactor the way we pass value to KratosPublicURL
+	KratosPublicURL = viper.GetString("baseUrl") + viper.GetString("kratos.publicBasePath")
 	return &Users{
 		LoginView:        views.NewView("bootstrap", "login"),
 		RegistrationView: views.NewView("bootstrap", "registration"),

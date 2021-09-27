@@ -1,6 +1,6 @@
 package controllers
 
-import "github.com/monkjunior/poc-kratos-hydra/views"
+import "github.com/monkjunior/poc-kratos-hydra/pkg/views"
 
 func NewProtectedSites() *ProtectedSites {
 	return &ProtectedSites{
