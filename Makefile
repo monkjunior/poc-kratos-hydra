@@ -10,7 +10,7 @@ clean-all:
       rm -s -v -f
 
 compile:
-	go build -o bin/ory-poc *.go
+	go build -o bin/authctl *.go
 
 update-ui:
 	docker-compose up -d --build \
