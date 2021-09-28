@@ -293,6 +293,7 @@ func generateAuthCodeURL() (string, string) {
 }
 
 func exchangeToken(ctx context.Context, code string) (*oauth2.Token, error) {
+	// TODO: need to generate this config from Viper config
 	oauth2Config := oauth2.Config{
 		ClientID:     "kratos-client",
 		ClientSecret: "secret",

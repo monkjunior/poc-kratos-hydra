@@ -68,6 +68,11 @@ authorizers:
 mutators:
   noop:
     enabled: true
+  header:
+    enabled: true
+    config:
+      headers:
+        X-User-ID: '{{ print .Extra.identity.id }}'
   id_token:
     enabled: true
     config:

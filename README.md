@@ -20,6 +20,12 @@ $ make examine-authorization-code
 ```
 Visit the client at `http://127.0.0.1:5555`
 
+From here, if we access `http://127.0.0.1:5555/mock/api`, it will print out all the headers.
+It also contains some custom headers which are produced from Oathkeeper like:
+- `Authorization: bear ...`
+- `X-User-ID: ...`
+It is quite easy to add more custom header if you want.
+
 Rebuild and update UI service:
 ```bash
 $ make update-ui
