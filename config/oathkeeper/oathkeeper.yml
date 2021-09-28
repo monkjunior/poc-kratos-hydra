@@ -52,6 +52,10 @@ authenticators:
       subject_from: "identity.id"
       only:
         - ory_kratos_session
+  oauth2_introspection:
+    enabled: true
+    config:
+      introspection_url: http://hydra:4445/oauth2/introspect
   noop:
     enabled: true
 
@@ -72,7 +76,8 @@ mutators:
     enabled: true
     config:
       headers:
-        X-User-ID: '{{ print .Extra.identity.id }}'
+        X-User-UUID: "{{ print .Extra.UserUUID }}"
+        X-User-Email: "{{ print .Extra.Email }}"
   id_token:
     enabled: true
     config:

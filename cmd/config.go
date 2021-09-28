@@ -20,8 +20,9 @@ type KratosConfig struct {
 }
 
 type HydraConfig struct {
-	Public HydraTransportConfig
-	Admin  HydraTransportConfig
+	Public            HydraTransportConfig
+	Admin             HydraTransportConfig
+	FirstPartyClients []string `json:"first_party_clients"`
 }
 
 type HydraTransportConfig struct {

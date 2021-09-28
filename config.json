@@ -17,6 +17,9 @@
       "host": "hydra:4445",
       "schemes": ["http"],
       "basePath": "/"
-    }
+    },
+    "first_party_clients": [
+      "kratos-client"
+    ]
   }
 }
