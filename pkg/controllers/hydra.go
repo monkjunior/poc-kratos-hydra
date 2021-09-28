@@ -13,6 +13,7 @@ import (
 	hydraAdmin "github.com/ory/hydra-client-go/client/admin"
 	hydraModel "github.com/ory/hydra-client-go/models"
 	kratosClient "github.com/ory/kratos-client-go"
+	"github.com/spf13/viper"
 	"golang.org/x/oauth2"
 )
 
@@ -66,7 +67,6 @@ func (h *Hydra) GetHydraLogin(w http.ResponseWriter, r *http.Request) {
 	}
 
 	state := r.URL.Query().Get("hydra_login_state")
-	log.Println("hydra_login_state=", state)
 	if state == "" {
 		log.Println("Got empty hydra login state")
 		redirectToLogin(w, r)
@@ -74,7 +74,6 @@ func (h *Hydra) GetHydraLogin(w http.ResponseWriter, r *http.Request) {
 	}
 
 	kratosSessionCookie, err := r.Cookie("ory_kratos_session")
-	log.Println("ory_kratos_session=", kratosSessionCookie)
 	if err != nil {
 		log.Println("Failed to get ory_kratos_session", err)
 		redirectToLogin(w, r)
@@ -98,11 +97,20 @@ func (h *Hydra) GetHydraLogin(w http.ResponseWriter, r *http.Request) {
 // ConsentForm stores consent form data to render consent page
 type ConsentForm struct {
 	// TODO: implement csrf protection using gorilla csrf
-	Subject          string
-	ConsentChallenge string   `schema:"consent_challenge"`
-	Scopes           []string `schema:"scopes"`
-	Remember         bool     `schema:"remember"`
-	Accept           string   `schema:"accept"`
+	Subject                 string
+	ConsentChallenge        string   `schema:"consent_challenge"`
+	Scopes                  []string `schema:"scopes"`
+	Remember                bool     `schema:"remember"`
+	Accept                  string   `schema:"accept"`
+	AccessTokenCustomClaims AccessTokenCustomClaims
+}
+
+// AccessTokenCustomClaims defines and stores some data from Kratos session.
+// We use it to enrich information when perform token introspection.
+// Then, these information will be set to HTTP header by using Oathkeeper mutator.
+type AccessTokenCustomClaims struct {
+	UserUUID string
+	Email    string
 }
 
 // GetHydraConsent
@@ -123,15 +131,26 @@ func (h *Hydra) GetHydraConsent(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	payload := isOK.GetPayload()
-	form := ConsentForm{
+	form := &ConsentForm{
 		Subject:          payload.Subject,
 		ConsentChallenge: consentChallenge,
 		Scopes:           strings.Split(payload.Client.Scope, " "),
 	}
+	form.AccessTokenCustomClaims = h.getAccessTokenCustomClaims(r)
 	if payload.Skip {
-		h.acceptConsent(w, r, form)
+		h.acceptConsent(w, r, *form)
 		return
 	}
+
+	// intercept consent if login from first party app
+	firstPartyHydraClients := viper.GetStringSlice("hydra.first_party_clients")
+	for _, c := range firstPartyHydraClients {
+		if c == payload.Client.ClientID {
+			h.acceptConsent(w, r, *form)
+			return
+		}
+	}
+
 	data := views.Data{
 		Yield: form,
 	}
@@ -153,6 +172,25 @@ func (h *Hydra) PostHydraConsent(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	h.acceptConsent(w, r, form)
+}
+
+// getAccessTokenCustomClaims enriches custom claims info by requesting
+// to Kratos "whoami" endpoint for more information about the identity.
+func (h *Hydra) getAccessTokenCustomClaims(r *http.Request) AccessTokenCustomClaims {
+	session, res, err := h.kratosClient.V0alpha1Api.ToSession(r.Context()).Cookie(r.Header.Get("Cookie")).Execute()
+	if err != nil || res == nil || res.StatusCode != http.StatusOK || !session.GetActive() {
+		return AccessTokenCustomClaims{}
+	}
+	userUUID := session.Identity.GetId()
+	var userEmail string
+	if identityTraits, ok := session.Identity.Traits.(map[string]interface{}); ok {
+		userEmail, _ = identityTraits["email"].(string)
+	}
+	return AccessTokenCustomClaims{
+		UserUUID: userUUID,
+		Email:    userEmail,
+	}
+
 }
 
 // acceptLogin will redirect to return endpoint if the process is successful
@@ -177,14 +215,13 @@ IsActive: %v
 UserInfo %v
 `, identityID, sessionID, isSessionActive, identityTraits)
 
-	loginReqBody := &hydraModel.AcceptLoginRequest{
+	loginReqParams := &hydraAdmin.AcceptLoginRequestParams{}
+	loginReqParams.WithLoginChallenge(loginChallenge)
+	loginReqParams.WithBody(&hydraModel.AcceptLoginRequest{
 		Subject:     &identityID,
 		Remember:    true,
 		RememberFor: 3600,
-	}
-	loginReqParams := &hydraAdmin.AcceptLoginRequestParams{}
-	loginReqParams.WithLoginChallenge(loginChallenge)
-	loginReqParams.WithBody(loginReqBody)
+	})
 	loginReqParams.WithContext(r.Context())
 	acceptRes, err := h.hydraAdmin.Admin.AcceptLoginRequest(loginReqParams)
 	if err != nil {
@@ -215,6 +252,10 @@ func (h *Hydra) acceptConsent(w http.ResponseWriter, r *http.Request, form Conse
 			GrantAccessTokenAudience: payload.RequestedAccessTokenAudience,
 			Remember:                 form.Remember,
 			RememberFor:              3600,
+			Session: &hydraModel.ConsentRequestSession{
+				AccessToken: form.AccessTokenCustomClaims,
+				IDToken:     form.AccessTokenCustomClaims,
+			},
 		},
 		Context: r.Context(),
 	}
