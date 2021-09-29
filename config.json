@@ -21,5 +21,9 @@
     "first_party_clients": [
       "kratos-client"
     ]
+  },
+  "log": {
+    "mode": "dev",
+    "level": "info"
   }
 }

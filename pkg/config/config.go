@@ -1,15 +1,18 @@
-package cmd
+package config
 
 import (
 	hydraSDK "github.com/ory/hydra-client-go/client"
 	kratosSDK "github.com/ory/kratos-client-go"
 )
 
+var Cfg Config
+
 type Config struct {
 	Env     string       `json:"env"`
 	BaseURL string       `json:"baseUrl"`
 	Kratos  KratosConfig `json:"kratos"`
 	Hydra   HydraConfig  `json:"hydra"`
+	Log     LogConfig    `json:"log"`
 }
 
 type KratosConfig struct {
@@ -29,6 +32,11 @@ type HydraTransportConfig struct {
 	Host     string   `json:"host"`
 	BasePath string   `json:"basePath"`
 	Schemes  []string `json:"schemes"`
+}
+
+type LogConfig struct {
+	Mode  string `json:"mode"`
+	Level string `json:"level"`
 }
 
 // GetAuthStackCfg read config file at

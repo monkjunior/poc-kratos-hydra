@@ -4,13 +4,13 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/monkjunior/poc-kratos-hydra/pkg/config"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
 
 var (
 	cfgFile string
-	Cfg     Config
 )
 
 // rootCmd represents the base command when called without any subcommands
@@ -51,7 +51,7 @@ func initConfig() {
 		fmt.Fprintln(os.Stderr, "Failed to read config file:", viper.ConfigFileUsed())
 	}
 
-	if err := viper.Unmarshal(&Cfg); err != nil {
+	if err := viper.Unmarshal(&config.Cfg); err != nil {
 		fmt.Printf("Unable to decode into Config struct, %v", err)
 		return
 	}

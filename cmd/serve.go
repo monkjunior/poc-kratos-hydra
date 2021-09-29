@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
+	"github.com/monkjunior/poc-kratos-hydra/pkg/config"
 	"github.com/monkjunior/poc-kratos-hydra/pkg/controllers"
 	"github.com/monkjunior/poc-kratos-hydra/pkg/middlewares"
 	hydraSDK "github.com/ory/hydra-client-go/client"
@@ -25,7 +26,7 @@ func init() {
 }
 
 func runServeCmd(cmd *cobra.Command, args []string) {
-	kratosCfg, hPubCfg, hAdmCfg := GetAuthStackCfg()
+	kratosCfg, hPubCfg, hAdmCfg := config.GetAuthStackCfg()
 	k := kratosSDK.NewAPIClient(&kratosCfg)
 	hCli := hydraSDK.NewHTTPClientWithConfig(nil, &hPubCfg)
 	hAdm := hydraSDK.NewHTTPClientWithConfig(nil, &hAdmCfg)

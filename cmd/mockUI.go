@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/gorilla/mux"
+	"github.com/monkjunior/poc-kratos-hydra/pkg/config"
 	"github.com/monkjunior/poc-kratos-hydra/pkg/controllers"
 	"github.com/monkjunior/poc-kratos-hydra/pkg/middlewares"
 	kratosSDK "github.com/ory/kratos-client-go"
@@ -24,7 +25,7 @@ func init() {
 }
 
 func runMockUICmd(cmd *cobra.Command, args []string) {
-	kratosCfg, _, _ := GetAuthStackCfg()
+	kratosCfg, _, _ := config.GetAuthStackCfg()
 	k := kratosSDK.NewAPIClient(&kratosCfg)
 
 	mockUISites := controllers.NewMockUISites()
