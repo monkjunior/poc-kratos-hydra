@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/monkjunior/poc-kratos-hydra/pkg/config"
 	"github.com/monkjunior/poc-kratos-hydra/pkg/views"
 )
 
@@ -31,8 +32,7 @@ type MockSiteData struct {
 
 // GetHome just contain a login button to perform login with hydra
 func (f *MockUISites) GetHome(w http.ResponseWriter, r *http.Request) {
-	// TODO: need to reimplement this, currently cannot validate oauthState
-	hydraLoginURL, oauthState = generateAuthCodeURL()
+	hydraLoginURL, oauthState = config.Cfg.GetBrowserAuthCodeURL()
 	data := views.Data{
 		Yield: MockSiteData{
 			HydraLoginURL: hydraLoginURL,
