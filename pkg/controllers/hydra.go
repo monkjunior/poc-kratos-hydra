@@ -7,13 +7,13 @@ import (
 	"net/url"
 	"strings"
 
+	"github.com/monkjunior/poc-kratos-hydra/pkg/config"
 	"github.com/monkjunior/poc-kratos-hydra/pkg/rand"
 	"github.com/monkjunior/poc-kratos-hydra/pkg/views"
 	hydraSDK "github.com/ory/hydra-client-go/client"
 	hydraAdmin "github.com/ory/hydra-client-go/client/admin"
 	hydraModel "github.com/ory/hydra-client-go/models"
 	kratosClient "github.com/ory/kratos-client-go"
-	"github.com/spf13/viper"
 	"golang.org/x/oauth2"
 )
 
@@ -143,12 +143,9 @@ func (h *Hydra) GetHydraConsent(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// intercept consent if login from first party app
-	firstPartyHydraClients := viper.GetStringSlice("hydra.first_party_clients")
-	for _, c := range firstPartyHydraClients {
-		if c == payload.Client.ClientID {
-			h.acceptConsent(w, r, *form)
-			return
-		}
+	if payload.Client.ClientID == config.Cfg.Hydra.Client.ID {
+		h.acceptConsent(w, r, *form)
+		return
 	}
 
 	data := views.Data{
@@ -308,46 +305,7 @@ func redirectToLogin(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, redirectUrl, http.StatusFound)
 }
 
-// generateAuthCodeURL generate authentication URL from Hydra client config
-// This function is just used for server-side demo only.
-//
-// Our SPA needs to implement by itself.
-func generateAuthCodeURL() (string, string) {
-	// TODO: need to generate this config from Viper config
-	oauth2Config := oauth2.Config{
-		ClientID:     "kratos-client",
-		ClientSecret: "secret",
-		RedirectURL:  "http://127.0.0.1:4455/callback",
-
-		// Discovery returns the OAuth2 endpoints.
-		Endpoint: oauth2.Endpoint{
-			AuthURL:  "http://127.0.0.1:4444/oauth2/auth",
-			TokenURL: "http://127.0.0.1:4444/oauth2/token",
-		},
-
-		// "openid" is a required scope for OpenID Connect flows.
-		Scopes: []string{"openid"},
-	}
-	state, _ := rand.GenerateHydraState()
-	authCodeURL := oauth2Config.AuthCodeURL(state)
-	return authCodeURL, state
-}
-
 func exchangeToken(ctx context.Context, code string) (*oauth2.Token, error) {
-	// TODO: need to generate this config from Viper config
-	oauth2Config := oauth2.Config{
-		ClientID:     "kratos-client",
-		ClientSecret: "secret",
-		RedirectURL:  "http://127.0.0.1:4455/callback",
-
-		// Discovery returns the OAuth2 endpoints.
-		Endpoint: oauth2.Endpoint{
-			AuthURL:  "http://hydra:4444/oauth2/auth",
-			TokenURL: "http://hydra:4444/oauth2/token",
-		},
-
-		// "openid" is a required scope for OpenID Connect flows.
-		Scopes: []string{"openid"},
-	}
+	oauth2Config := config.Cfg.GetInternalHydraOAuth2Config()
 	return oauth2Config.Exchange(ctx, code)
 }

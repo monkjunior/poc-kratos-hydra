@@ -8,6 +8,7 @@
     "publicBasePath": "/.ory/kratos/public"
   },
   "hydra": {
+    "browserURL": "http://127.0.0.1:4455/.ory/hydra/public",
     "public": {
       "host": "hydra:4444",
       "schemes": ["http"],
@@ -18,9 +19,14 @@
       "schemes": ["http"],
       "basePath": "/"
     },
-    "first_party_clients": [
-      "kratos-client"
-    ]
+    "client": {
+      "id": "kratos-client",
+      "secret": "secret",
+      "callbackURL": "http://127.0.0.1:4455/callback",
+      "scopes": [
+        "openid"
+      ]
+    }
   },
   "log": {
     "mode": "dev",

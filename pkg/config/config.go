@@ -22,18 +22,6 @@ type KratosConfig struct {
 	PublicBasePath string `json:"publicBasePath"`
 }
 
-type HydraConfig struct {
-	Public            HydraTransportConfig
-	Admin             HydraTransportConfig
-	FirstPartyClients []string `json:"first_party_clients"`
-}
-
-type HydraTransportConfig struct {
-	Host     string   `json:"host"`
-	BasePath string   `json:"basePath"`
-	Schemes  []string `json:"schemes"`
-}
-
 type LogConfig struct {
 	Mode  string `json:"mode"`
 	Level string `json:"level"`

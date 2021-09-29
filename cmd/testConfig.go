@@ -3,6 +3,7 @@ package cmd
 import (
 	"fmt"
 
+	"github.com/monkjunior/poc-kratos-hydra/pkg/config"
 	"github.com/spf13/cobra"
 )
 
@@ -11,7 +12,7 @@ var testConfigCmd = &cobra.Command{
 	Use:   "test-config",
 	Short: "Show the current config",
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Printf("Config: %+v\n", Cfg)
+		fmt.Printf("Config: %+v\n", config.Cfg)
 	},
 }
 

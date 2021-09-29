@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 
-	"github.com/monkjunior/poc-kratos-hydra/rand"
+	"github.com/monkjunior/poc-kratos-hydra/pkg/rand"
 	"golang.org/x/oauth2"
 )
 
