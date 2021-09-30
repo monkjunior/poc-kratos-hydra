@@ -2,7 +2,9 @@ package cmd
 
 import (
 	"context"
+	"crypto/tls"
 	"math"
+	"net/http"
 	"time"
 
 	"github.com/monkjunior/poc-kratos-hydra/pkg/config"
@@ -50,10 +52,43 @@ func runCreateClientCmd(cmd *cobra.Command, args []string) {
 	params := hydraAdmin.CreateOAuth2ClientParams{
 		Body:    config.Cfg.GetHydraOauth2Config(),
 		Context: context.Background(),
+		HTTPClient: &http.Client{
+			Transport: newTransport(oauth2Cmd),
+		},
 	}
 	result, err := hAdm.Admin.CreateOAuth2Client(&params)
 	if err != nil || result == nil {
 		logger.Fatal("failed to register a new oauth2 client", zap.Error(err))
 	}
 	logger.Info("successfully register a new oauth2 client")
+}
+
+type transport struct {
+	Transport http.RoundTripper
+	cmd       *cobra.Command
+}
+
+func newTransport(cmd *cobra.Command) *transport {
+	skipTLSVerify, err := cmd.PersistentFlags().GetBool("skip-tls-verify")
+	if err != nil {
+		skipTLSVerify = false
+	}
+	return &transport{
+		cmd: cmd,
+		Transport: &http.Transport{
+			TLSClientConfig: &tls.Config{InsecureSkipVerify: skipTLSVerify},
+		},
+	}
+}
+
+func (t *transport) RoundTrip(req *http.Request) (*http.Response, error) {
+	fakeTLSTerm, err := t.cmd.PersistentFlags().GetBool("fake-tls-termination")
+	if err != nil {
+		fakeTLSTerm = false
+	}
+
+	if fakeTLSTerm {
+		req.Header.Set("X-Forwarded-Proto", "https")
+	}
+	return t.Transport.RoundTrip(req)
 }

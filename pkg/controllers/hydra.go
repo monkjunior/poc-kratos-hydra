@@ -48,8 +48,9 @@ func (h *Hydra) GetHydraLogin(w http.ResponseWriter, r *http.Request) {
 		redirectToLogin(w, r)
 		return
 	}
-	params := hydraAdmin.NewGetLoginRequestParams()
-	params.LoginChallenge = loginChallenge
+	params := &hydraAdmin.GetLoginRequestParams{
+		LoginChallenge: loginChallenge,
+	}
 	isOK, err := h.hydraAdmin.Admin.GetLoginRequest(params)
 	if err != nil || isOK == nil {
 		log.Println("Failed to fetch hydra login info with login_challenge =", loginChallenge, err)
@@ -300,7 +301,7 @@ func redirectToLogin(w http.ResponseWriter, r *http.Request) {
 	v := url.Values{}
 	v.Add("login_challenge", r.URL.Query().Get("login_challenge"))
 	v.Add("hydra_login_state", hydraLoginState)
-	returnToString := "http://127.0.0.1:4455/auth/hydra/login?" + url.QueryEscape(v.Encode())
+	returnToString := config.Cfg.BaseURL + "/auth/hydra/login?" + url.QueryEscape(v.Encode())
 	redirectUrl := KratosPublicURL + KratosSSLoginBrowserPath + "?refresh=true&return_to=" + returnToString
 	http.Redirect(w, r, redirectUrl, http.StatusFound)
 }
