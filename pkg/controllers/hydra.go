@@ -50,6 +50,7 @@ func (h *Hydra) GetHydraLogin(w http.ResponseWriter, r *http.Request) {
 	}
 	params := &hydraAdmin.GetLoginRequestParams{
 		LoginChallenge: loginChallenge,
+		Context:        r.Context(),
 	}
 	isOK, err := h.hydraAdmin.Admin.GetLoginRequest(params)
 	if err != nil || isOK == nil {
