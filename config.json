@@ -20,12 +20,18 @@
       "basePath": "/"
     },
     "client": {
-      "id": "kratos-client",
+      "id": "authctl-client",
       "secret": "secret",
-      "callbackURL": "http://127.0.0.1:4455/callback",
-      "scopes": [
-        "openid"
-      ]
+      "grantTypes": [
+        "authorization_code",
+        "refresh_token"
+      ],
+      "responseTypes": [
+        "code",
+        "id_token"
+      ],
+      "callbacksURL": ["http://127.0.0.1:4455/callback"],
+      "scopes": "openid offline"
     }
   },
   "log": {
