@@ -6,6 +6,10 @@ services:
     image: oryd/oathkeeper:v0.38
     depends_on:
       - kratos
+      - hydra
+      - ui
+      - api
+      - authctl
     ports:
       - 4455:4455 # Reverse proxy port
       - 4456:4456 # Oathkeeper API port
@@ -21,6 +25,9 @@ services:
       - ./config/oathkeeper:/etc/config/oathkeeper
 
   ui:
+    depends_on:
+      - hydra
+      - kratos
     build:
       context: .
       dockerfile: Dockerfile
@@ -36,6 +43,9 @@ services:
       - intranet
 
   authctl:
+    depends_on:
+      - hydra
+      - kratos
     build:
       context: .
       dockerfile: Dockerfile
@@ -49,8 +59,26 @@ services:
         target: /etc/config/config.json
     networks:
       - intranet
+  # Register an OAuth2 client with hydra
+  authctl-init:
+    depends_on:
+      - oathkeeper
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command:
+      authctl --config /etc/config/config.json oauth2 create-client
+    volumes:
+      - type: bind
+        source: ./config.json
+        target: /etc/config/config.json
+    networks:
+      - intranet
 
   api:
+    depends_on:
+      - hydra
+      - kratos
     build:
       context: .
       dockerfile: Dockerfile
@@ -102,7 +130,7 @@ services:
     image: oryd/hydra:v1.10.6
     depends_on:
       - hydra-migrate
-      - jaeger
+#      - jaeger
     ports:
       - "4444:4444" # Public port
       - "4445:4445" # Admin port
@@ -124,13 +152,13 @@ services:
       # https://www.ory.sh/hydra/docs/advanced/#adding-custom-claims-top-level-to-the-access-token
       # - OAUTH2_ALLOWED_TOP_LEVEL_CLAIMS=user_uuid,email
       - DSN=postgres://hydra:secret@postgres_hydra:5432/hydra?sslmode=disable&max_conns=20&max_idle_conns=4
-      ### Jaeger ###
-      # Instruction: https://www.ory.sh/hydra/docs/guides/tracing/ #
-      - TRACING_PROVIDER=jaeger
-      - TRACING_PROVIDERS_JAEGER_SAMPLING_SERVER_URL=http://jaeger:5778/sampling
-      - TRACING_PROVIDERS_JAEGER_LOCAL_AGENT_ADDRESS=jaeger:6831
-      - TRACING_PROVIDERS_JAEGER_SAMPLING_TYPE=const
-      - TRACING_PROVIDERS_JAEGER_SAMPLING_VALUE=1
+### Jaeger ###
+# Instruction: https://www.ory.sh/hydra/docs/guides/tracing/ #
+#      - TRACING_PROVIDER=jaeger
+#      - TRACING_PROVIDERS_JAEGER_SAMPLING_SERVER_URL=http://jaeger:5778/sampling
+#      - TRACING_PROVIDERS_JAEGER_LOCAL_AGENT_ADDRESS=jaeger:6831
+#      - TRACING_PROVIDERS_JAEGER_SAMPLING_TYPE=const
+#      - TRACING_PROVIDERS_JAEGER_SAMPLING_VALUE=1
     networks:
       - intranet
 
@@ -174,13 +202,13 @@ services:
       - '4437:4437'
     networks:
       - intranet
-  # Tracing tool for Hydra
-  jaeger:
-    image: jaegertracing/all-in-one:1.19.2
-    ports:
-      - "16686:16686" # The UI port
-    networks:
-      - intranet
+#   Tracing tool for Hydra
+#  jaeger:
+#    image: jaegertracing/all-in-one:1.19.2
+#    ports:
+#      - "16686:16686" # The UI port
+#    networks:
+#      - intranet
 
 networks:
   intranet:
