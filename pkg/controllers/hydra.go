@@ -1,7 +1,6 @@
 package controllers
 
 import (
-	"context"
 	"log"
 	"net/http"
 	"net/url"
@@ -14,7 +13,6 @@ import (
 	hydraAdmin "github.com/ory/hydra-client-go/client/admin"
 	hydraModel "github.com/ory/hydra-client-go/models"
 	kratosClient "github.com/ory/kratos-client-go"
-	"golang.org/x/oauth2"
 )
 
 var (
@@ -305,9 +303,4 @@ func redirectToLogin(w http.ResponseWriter, r *http.Request) {
 	returnToString := config.Cfg.BaseURL + "/auth/hydra/login?" + url.QueryEscape(v.Encode())
 	redirectUrl := KratosPublicURL + KratosSSLoginBrowserPath + "?refresh=true&return_to=" + returnToString
 	http.Redirect(w, r, redirectUrl, http.StatusFound)
-}
-
-func exchangeToken(ctx context.Context, code string) (*oauth2.Token, error) {
-	oauth2Config := config.Cfg.GetInternalHydraOAuth2Config()
-	return oauth2Config.Exchange(ctx, code)
 }

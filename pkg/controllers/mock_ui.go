@@ -1,12 +1,14 @@
 package controllers
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"time"
 
 	"github.com/monkjunior/poc-kratos-hydra/pkg/config"
 	"github.com/monkjunior/poc-kratos-hydra/pkg/views"
+	"golang.org/x/oauth2"
 )
 
 var (
@@ -101,4 +103,9 @@ func (u *Users) GetCallback(w http.ResponseWriter, r *http.Request) {
 	}
 	u.CallbackView.Render(w, r, data)
 	return
+}
+
+func exchangeToken(ctx context.Context, code string) (*oauth2.Token, error) {
+	oauth2Config := config.Cfg.GetInternalHydraOAuth2Config()
+	return oauth2Config.Exchange(ctx, code)
 }
