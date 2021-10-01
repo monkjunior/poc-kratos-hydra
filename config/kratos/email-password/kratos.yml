@@ -12,6 +12,12 @@ serve:
 
 selfservice:
   default_browser_return_url: http://127.0.0.1:4455/
+  # We can overwrite the return urls that are configured in registration,
+  # login, setting, ... flows by using "?return_to=<overwrite-url-value>" params when initialize
+  # a flow.
+  #
+  # Because Ory Kratos prevent Open Redirect Attacks, we need to whitelist these custom domains.
+  # More detailed info: https://www.ory.sh/kratos/docs/concepts/browser-redirect-flow-completion/
   whitelisted_return_urls:
     - http://127.0.0.1:4455
 
