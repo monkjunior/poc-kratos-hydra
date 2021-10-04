@@ -1,12 +1,19 @@
 package controllers
 
 import (
+	"errors"
+	"go.uber.org/zap"
 	"net/http"
 
 	"github.com/monkjunior/poc-kratos-hydra/pkg/common"
 	"github.com/monkjunior/poc-kratos-hydra/pkg/config"
+	"github.com/monkjunior/poc-kratos-hydra/pkg/log"
 	"github.com/monkjunior/poc-kratos-hydra/pkg/views"
 	kratosClient "github.com/ory/kratos-client-go"
+)
+
+var (
+	ErrConfirmPasswordMismatched = errors.New("controller: confirm password mismatched")
 )
 
 func NewUsers(k *kratosClient.APIClient) *Users {
@@ -14,7 +21,6 @@ func NewUsers(k *kratosClient.APIClient) *Users {
 	return &Users{
 		LoginView:        views.NewView("bootstrap", "login"),
 		RegistrationView: views.NewView("bootstrap", "registration"),
-		CallbackView:     views.NewView("bootstrap", "callback"),
 		kratosClient:     k,
 	}
 }
@@ -107,18 +113,83 @@ func (u *Users) GetRegistration(w http.ResponseWriter, r *http.Request) {
 	u.RegistrationView.Render(w, r, data)
 }
 
-// CallbackForm stores result token after OAuth flow
-type CallbackForm struct {
-	Error        *CallbackError
-	AccessToken  string
-	RefreshToken string
-	Expiry       string
-	IDToken      string
+type ChangePasswordForm struct {
+	Token           string `schema:"token"`
+	CurrentPassword string `schema:"current_password"`
+	NewPassword     string `schema:"new_password"`
+	ConfirmPassword string `schema:"confirm_password"`
 }
 
-type CallbackError struct {
-	Name        string
-	Description string
-	Hint        string
-	Debug       string
+// PostChangePassword handles request from front-end app to change password of current user
+func (u *Users) PostChangePassword(w http.ResponseWriter, r *http.Request) {
+	uEmail := r.Header.Get("X-User-Email")
+	logger := log.GetLogger().With(
+		zap.String("receiver", "User"),
+		zap.String("method", "PostChangePassword"),
+		zap.String("user_email", uEmail),
+	)
+	var form ChangePasswordForm
+	err := parseForm(r, &form)
+	if err != nil {
+		logger.Error("failed to parse form", zap.Error(err))
+		return
+	}
+	loginFlow, res, err := u.kratosClient.V0alpha1Api.InitializeSelfServiceLoginFlowWithoutBrowser(r.Context()).Execute()
+	if err != nil || res == nil || res.StatusCode != http.StatusOK || loginFlow == nil {
+		if res != nil {
+			logger.With(zap.Int("response_status_code", res.StatusCode))
+		}
+		logger.Error("failed to init login flow",
+			zap.Error(err),
+		)
+		return
+	}
+	loginResult, res, err := u.kratosClient.V0alpha1Api.SubmitSelfServiceLoginFlow(r.Context()).Flow(loginFlow.Id).SubmitSelfServiceLoginFlowBody(
+		kratosClient.SubmitSelfServiceLoginFlowWithPasswordMethodBodyAsSubmitSelfServiceLoginFlowBody(&kratosClient.SubmitSelfServiceLoginFlowWithPasswordMethodBody{
+			Method:             "password",
+			Password:           form.CurrentPassword,
+			PasswordIdentifier: uEmail,
+		}),
+	).Execute()
+	if err != nil || res == nil || res.StatusCode != http.StatusOK || loginResult == nil {
+		if res != nil {
+			logger.With(zap.Int("response_status_code", res.StatusCode))
+		}
+		logger.Error("failed to validate current password", zap.Error(err))
+		return
+	}
+	if form.ConfirmPassword != form.NewPassword {
+		logger.Error("confirm password is not the same with new password",
+			zap.Error(ErrConfirmPasswordMismatched),
+		)
+		return
+	}
+	sessionToken := loginResult.GetSessionToken()
+	changePwFlow, res, err := u.kratosClient.V0alpha1Api.InitializeSelfServiceSettingsFlowWithoutBrowserExecute(
+		kratosClient.V0alpha1ApiApiInitializeSelfServiceSettingsFlowWithoutBrowserRequest{}.XSessionToken(sessionToken),
+	)
+	if err != nil || res == nil || res.StatusCode != http.StatusOK || changePwFlow == nil {
+		if res != nil {
+			logger.With(zap.Int("response_status_code", res.StatusCode))
+		}
+		logger.Error("failed to init change password flow",
+			zap.Error(err),
+		)
+		return
+	}
+
+	changePwResult, res, err := u.kratosClient.V0alpha1Api.SubmitSelfServiceSettingsFlow(r.Context()).Flow(changePwFlow.Id).XSessionToken(sessionToken).SubmitSelfServiceSettingsFlowBody(
+		kratosClient.SubmitSelfServiceSettingsFlowWithPasswordMethodBodyAsSubmitSelfServiceSettingsFlowBody(&kratosClient.SubmitSelfServiceSettingsFlowWithPasswordMethodBody{
+			Method:   "password",
+			Password: form.NewPassword,
+		}),
+	).Execute()
+	if err != nil || res == nil || res.StatusCode != http.StatusOK || changePwResult == nil {
+		if res != nil {
+			logger.With(zap.Int("response_status_code", res.StatusCode))
+		}
+		logger.Error("failed to change password password", zap.Error(err))
+		return
+	}
+	logger.Info("change password successfully")
 }
