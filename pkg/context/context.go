@@ -7,7 +7,6 @@ import (
 const (
 	sessionKey         privateKey = "is_session_active"
 	logoutKey          privateKey = "log_out_url"
-	hydraLoginStateKey privateKey = "hydra_login_state"
 )
 
 type privateKey string
@@ -33,19 +32,4 @@ func GetSession(ctx context.Context) (bool, string) {
 		}
 	}
 	return false, ""
-}
-
-// SetHydraLoginState is used to set the hydra login state value to context
-func SetHydraLoginState(ctx context.Context, state string) context.Context {
-	ctx = context.WithValue(ctx, hydraLoginStateKey, state)
-	return ctx
-}
-
-// GetHydraLoginState is used to get the hydra login state value from context
-func GetHydraLoginState(ctx context.Context) string {
-	s := ctx.Value(hydraLoginStateKey)
-	if state, ok := s.(string); ok {
-		return state
-	}
-	return ""
 }

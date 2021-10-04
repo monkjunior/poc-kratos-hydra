@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/gorilla/mux"
 	"github.com/monkjunior/poc-kratos-hydra/pkg/controllers"
-	"log"
 	"net/http"
 
 	"github.com/spf13/cobra"
@@ -29,5 +28,8 @@ func runMockAPICmd(cmd *cobra.Command, args []string) {
 	r.HandleFunc("/mock/api", mockAPI.GetAPI).Methods("GET")
 
 	fmt.Println("Listening at port 4437 ...")
-	log.Fatal(http.ListenAndServe(":4437", r))
+	err := http.ListenAndServe(":4437", r)
+	if err != nil {
+		panic(err)
+	}
 }

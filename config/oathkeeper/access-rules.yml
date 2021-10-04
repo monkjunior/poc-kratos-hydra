@@ -152,7 +152,7 @@
   mutators:
     - handler: noop
 
-- id: "ory:api:protected"
+- id: "ory:mock-api:protected"
   upstream:
     preserve_host: true
     url: "http://api:4437"
@@ -166,6 +166,28 @@
     handler: allow
   mutators:
 #    - handler: noop
+    - handler: id_token
+    - handler: header
+  errors:
+    - handler: redirect
+      config:
+        to: http://127.0.0.1:4455/auth/login
+
+- id: "ory:api:protected"
+  upstream:
+    preserve_host: true
+    url: "http://authctl:4435"
+  match:
+    url: "http://127.0.0.1:4455/<{user/change-password}>"
+    methods:
+      - GET
+      - POST
+  authenticators:
+    - handler: oauth2_introspection
+  authorizer:
+    handler: allow
+  mutators:
+    #    - handler: noop
     - handler: id_token
     - handler: header
   errors:
