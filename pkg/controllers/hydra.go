@@ -1,12 +1,14 @@
 package controllers
 
 import (
-	"log"
+	"errors"
+	"go.uber.org/zap"
 	"net/http"
 	"net/url"
 	"strings"
 
 	"github.com/monkjunior/poc-kratos-hydra/pkg/config"
+	"github.com/monkjunior/poc-kratos-hydra/pkg/log"
 	"github.com/monkjunior/poc-kratos-hydra/pkg/rand"
 	"github.com/monkjunior/poc-kratos-hydra/pkg/views"
 	hydraSDK "github.com/ory/hydra-client-go/client"
@@ -17,6 +19,12 @@ import (
 
 var (
 	hydraLoginState string
+
+	ErrMissingLoginChallengeParam   = errors.New("controller: missing login challenge param")
+	ErrMissingConsentChallengeParam = errors.New("controller: missing consent challenge param")
+	ErrMissingLoginStateParam       = errors.New("controller: missing login state param")
+	ErrMissingKratosLoginSession    = errors.New("controller: missing kratos login session")
+	ErrMismatchedHydraState         = errors.New("controller: mismatched hydra state")
 )
 
 func NewHydra(k *kratosClient.APIClient, hCli *hydraSDK.OryHydra, hAdm *hydraSDK.OryHydra) *Hydra {
@@ -40,25 +48,31 @@ type Hydra struct {
 // GetHydraLogin
 // GET /auth/hydra/login
 func (h *Hydra) GetHydraLogin(w http.ResponseWriter, r *http.Request) {
+	logger := log.GetLogger().With(
+		zap.String("receiver", "Hydra"),
+		zap.String("method", "GetHydraLogin"),
+	)
 	loginChallenge := r.URL.Query().Get("login_challenge")
 	if loginChallenge == "" {
-		log.Println("Missing login_challenge parameter")
+		logger.Warn("missing login_challenge parameter", zap.Error(ErrMissingLoginChallengeParam))
 		redirectToLogin(w, r)
 		return
 	}
+	logger.With(zap.String("login_challenge", loginChallenge))
 	params := &hydraAdmin.GetLoginRequestParams{
 		LoginChallenge: loginChallenge,
 		Context:        r.Context(),
 	}
 	isOK, err := h.hydraAdmin.Admin.GetLoginRequest(params)
 	if err != nil || isOK == nil {
-		log.Println("Failed to fetch hydra login info with login_challenge =", loginChallenge, err)
+		logger.Warn("failed to fetch hydra login info with login_challenge =", zap.Error(err))
 		redirectToLogin(w, r)
 		return
 	}
 	payload := isOK.GetPayload()
 
 	if *payload.Skip {
+		logger.Info("skip login")
 		// We can do some logic here, for example
 		// update the number of times the user logged in.
 		// We can also deny if there is something went wrong.
@@ -68,29 +82,30 @@ func (h *Hydra) GetHydraLogin(w http.ResponseWriter, r *http.Request) {
 
 	state := r.URL.Query().Get("hydra_login_state")
 	if state == "" {
-		log.Println("Got empty hydra login state")
+		logger.Warn("hydra_login_state param is required", zap.Error(ErrMissingLoginStateParam))
 		redirectToLogin(w, r)
 		return
 	}
 
 	kratosSessionCookie, err := r.Cookie("ory_kratos_session")
 	if err != nil {
-		log.Println("Failed to get ory_kratos_session", err)
+		logger.Warn("failed to get ory_kratos_session", zap.Error(err))
 		redirectToLogin(w, r)
 		return
 	}
 	if kratosSessionCookie.Value == "" {
-		log.Println("No kratos login session was set")
+		logger.Warn("no kratos login session was set", zap.Error(ErrMissingKratosLoginSession))
 		redirectToLogin(w, r)
 		return
 	}
 	// TODO: Need to enhance the way we validate this param to prevent conflicts
 	if state != hydraLoginState {
-		log.Println("Mismatch hydra login state")
+		logger.Warn("hydra login state is mismatched", zap.Error(ErrMismatchedHydraState))
 		redirectToLogin(w, r)
 		return
 	}
 
+	logger.Info("accepting login request ...")
 	h.acceptLogin(w, r, loginChallenge)
 }
 
@@ -116,18 +131,23 @@ type AccessTokenCustomClaims struct {
 // GetHydraConsent
 // GET /auth/hydra/consent
 func (h *Hydra) GetHydraConsent(w http.ResponseWriter, r *http.Request) {
+	logger := log.GetLogger().With(
+		zap.String("receiver", "Hydra"),
+		zap.String("method", "GetHydraConsent"),
+	)
 	consentChallenge := r.URL.Query().Get("consent_challenge")
 	if consentChallenge == "" {
-		log.Println("Missing consent_challenge parameter")
-		http.Error(w, "Something went wrong", http.StatusInternalServerError)
+		logger.Warn("missing consent_challenge parameter", zap.Error(ErrMissingConsentChallengeParam))
+		http.Error(w, ErrMissingConsentChallengeParam.Error(), http.StatusInternalServerError)
 		return
 	}
+	logger.With(zap.String("consent_challenge", consentChallenge))
 	params := hydraAdmin.NewGetConsentRequestParams()
 	params.ConsentChallenge = consentChallenge
 	isOK, err := h.hydraAdmin.Admin.GetConsentRequest(params)
 	if err != nil || isOK == nil {
-		log.Println("Failed to fetch hydra consent info with consent_challenge =", consentChallenge, err)
-		http.Error(w, "Something went wrong", http.StatusInternalServerError)
+		logger.Warn("failed to fetch hydra consent info", zap.Error(err))
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 	payload := isOK.GetPayload()
@@ -138,12 +158,14 @@ func (h *Hydra) GetHydraConsent(w http.ResponseWriter, r *http.Request) {
 	}
 	form.AccessTokenCustomClaims = h.getAccessTokenCustomClaims(r)
 	if payload.Skip {
+		logger.Info("skipping consent ...")
 		h.acceptConsent(w, r, *form)
 		return
 	}
 
 	// intercept consent if login from first party app
 	if payload.Client.ClientID == config.Cfg.Hydra.Client.ID {
+		logger.Info("accepting consent ...")
 		h.acceptConsent(w, r, *form)
 		return
 	}
@@ -151,23 +173,29 @@ func (h *Hydra) GetHydraConsent(w http.ResponseWriter, r *http.Request) {
 	data := views.Data{
 		Yield: form,
 	}
+	logger.Info("loading consent page ...")
 	h.ConsentView.Render(w, r, data)
 }
 
 // PostHydraConsent
 // POST /auth/hydra/consent
 func (h *Hydra) PostHydraConsent(w http.ResponseWriter, r *http.Request) {
+	logger := log.GetLogger().With(
+		zap.String("receiver", "Hydra"),
+		zap.String("method", "PostHydraConsent"),
+	)
 	var form ConsentForm
 	if err := parseForm(r, &form); err != nil {
-		log.Println("Could not parse consent form", err)
+		logger.Error("could not parse consent form", zap.Error(err))
 		http.Error(w, "Could not parse consent form", http.StatusInternalServerError)
 		return
 	}
-	log.Printf("Consent form: %+v\n", form)
 	if form.Accept == "deny" {
+		logger.Info("denying consent")
 		h.denyConsent(w, r, form)
 		return
 	}
+	logger.Info("accepting consent")
 	h.acceptConsent(w, r, form)
 }
 
@@ -193,24 +221,18 @@ func (h *Hydra) getAccessTokenCustomClaims(r *http.Request) AccessTokenCustomCla
 // acceptLogin will redirect to return endpoint if the process is successful
 // or generate an error page if an error occurred
 func (h *Hydra) acceptLogin(w http.ResponseWriter, r *http.Request, loginChallenge string) {
+	logger := log.GetLogger().With(
+		zap.String("receiver", "Hydra"),
+		zap.String("method", "acceptLogin"),
+	)
 	session, res, err := h.kratosClient.V0alpha1Api.ToSession(r.Context()).Cookie(r.Header.Get("Cookie")).Execute()
 	if err != nil || res == nil || res.StatusCode != http.StatusOK || !session.GetActive() {
-		log.Println("You did not log in")
+		logger.Warn("you did not log in")
 		redirectToLogin(w, r)
 		return
 	}
 
 	identityID := session.Identity.GetId()
-	identityTraits := session.Identity.Traits
-	sessionID := session.GetId()
-	isSessionActive := session.GetActive()
-
-	log.Printf(`Info of logged in user
-UserID: %v
-SessionID: %v
-IsActive: %v
-UserInfo %v
-`, identityID, sessionID, isSessionActive, identityTraits)
 
 	loginReqParams := &hydraAdmin.AcceptLoginRequestParams{}
 	loginReqParams.WithLoginChallenge(loginChallenge)
@@ -220,24 +242,31 @@ UserInfo %v
 		RememberFor: 3600,
 	})
 	loginReqParams.WithContext(r.Context())
+
 	acceptRes, err := h.hydraAdmin.Admin.AcceptLoginRequest(loginReqParams)
 	if err != nil {
-		log.Println("Failed to accept hydra login request", err)
-		http.Error(w, "Something went wrong", http.StatusInternalServerError)
+		logger.Error("failed to accept hydra login request", zap.Error(err))
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
+	logger.Info("successfully accept login")
 	http.Redirect(w, r, *acceptRes.Payload.RedirectTo, http.StatusFound)
 }
 
 // acceptConsent fetches consent info of current consent challenge, uses both consent info
 // and post form form the HTTP request to accept the consent challenge.
 func (h *Hydra) acceptConsent(w http.ResponseWriter, r *http.Request, form ConsentForm) {
+	logger := log.GetLogger().With(
+		zap.String("receiver", "Hydra"),
+		zap.String("method", "acceptConsent"),
+		zap.String("consent_challenge", form.ConsentChallenge),
+	)
 	params := hydraAdmin.NewGetConsentRequestParams()
 	params.ConsentChallenge = form.ConsentChallenge
 	isOK, err := h.hydraAdmin.Admin.GetConsentRequest(params)
 	if err != nil || isOK == nil {
-		log.Println("Failed to fetch hydra consent info with consent_challenge =", form.ConsentChallenge, err)
-		http.Error(w, "Some thing went wrong", http.StatusInternalServerError)
+		logger.Error("failed to fetch hydra consent info with consent_challenge =", zap.Error(err))
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 	payload := isOK.GetPayload()
@@ -258,15 +287,22 @@ func (h *Hydra) acceptConsent(w http.ResponseWriter, r *http.Request, form Conse
 	}
 	consentOK, err := h.hydraAdmin.Admin.AcceptConsentRequest(consentParams)
 	if err != nil {
-		log.Println("Could not accept consent challenge ", err)
+		logger.Error("could not accept consent challenge ", zap.Error(err))
 		http.Error(w, "Some thing went wrong", http.StatusInternalServerError)
 		return
 	}
+
+	logger.Info("successfully accept consent")
 	http.Redirect(w, r, *consentOK.Payload.RedirectTo, http.StatusFound)
 }
 
 // denyConsent rejects the consent request, it usually happens when user presses DENY button
 func (h *Hydra) denyConsent(w http.ResponseWriter, r *http.Request, form ConsentForm) {
+	logger := log.GetLogger().With(
+		zap.String("receiver", "Hydra"),
+		zap.String("method", "denyConsent"),
+		zap.String("consent_challenge", form.ConsentChallenge),
+	)
 	consentParams := &hydraAdmin.RejectConsentRequestParams{
 		Context:          r.Context(),
 		ConsentChallenge: form.ConsentChallenge,
@@ -280,8 +316,8 @@ func (h *Hydra) denyConsent(w http.ResponseWriter, r *http.Request, form Consent
 	}
 	rejectOK, err := h.hydraAdmin.Admin.RejectConsentRequest(consentParams)
 	if err != nil {
-		log.Println("Could not reject consent request ", err)
-		http.Error(w, "Some thing went wrong", http.StatusInternalServerError)
+		logger.Error("could not reject consent request ", zap.Error(err))
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 	http.Redirect(w, r, *rejectOK.Payload.RedirectTo, http.StatusFound)
@@ -292,11 +328,9 @@ func redirectToLogin(w http.ResponseWriter, r *http.Request) {
 	state, err := rand.GenerateHydraState()
 	hydraLoginState = state
 	if err != nil {
-		log.Println("Failed to generate hydra state", err)
 		http.Error(w, "Something went wrong", http.StatusInternalServerError)
 		return
 	}
-
 	v := url.Values{}
 	v.Add("login_challenge", r.URL.Query().Get("login_challenge"))
 	v.Add("hydra_login_state", hydraLoginState)

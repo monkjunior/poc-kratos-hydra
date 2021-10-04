@@ -36,6 +36,6 @@
   },
   "log": {
     "mode": "dev",
-    "level": "info"
+    "level": "debug"
   }
 }

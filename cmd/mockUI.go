@@ -2,12 +2,10 @@ package cmd
 
 import (
 	"fmt"
-	"log"
 	"net/http"
 
 	"github.com/gorilla/mux"
 	"github.com/monkjunior/poc-kratos-hydra/pkg/controllers"
-	"github.com/monkjunior/poc-kratos-hydra/pkg/middlewares"
 	"github.com/spf13/cobra"
 )
 
@@ -25,8 +23,6 @@ func init() {
 func runMockUICmd(cmd *cobra.Command, args []string) {
 	mockUISites := controllers.NewMockUISites()
 
-	logMw := middlewares.EntryLog{}
-
 	r := mux.NewRouter()
 
 	r.HandleFunc("/", mockUISites.GetHome)
@@ -37,5 +33,8 @@ func runMockUICmd(cmd *cobra.Command, args []string) {
 	r.PathPrefix("/assets/").Handler(http.StripPrefix("/assets/", assetsHandler))
 
 	fmt.Println("Listening at port 4436 ...")
-	log.Fatal(http.ListenAndServe(":4436", logMw.Apply(r)))
+	err := http.ListenAndServe(":4436", r)
+	if err != nil {
+		panic(err)
+	}
 }

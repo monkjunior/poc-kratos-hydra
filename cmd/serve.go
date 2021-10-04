@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"fmt"
-	"log"
 	"net/http"
 
 	"github.com/gorilla/mux"
@@ -36,7 +35,6 @@ func runServeCmd(cmd *cobra.Command, args []string) {
 	userC := controllers.NewUsers(k)
 	hydraC := controllers.NewHydra(k, hCli, hAdm)
 
-	logMw := middlewares.EntryLog{}
 	identityMw := middlewares.Identity{KratosClient: k}
 
 	r := mux.NewRouter()
@@ -56,5 +54,8 @@ func runServeCmd(cmd *cobra.Command, args []string) {
 	r.PathPrefix("/assets/").Handler(http.StripPrefix("/assets/", assetsHandler))
 
 	fmt.Println("Listening at port 4435 ...")
-	log.Fatal(http.ListenAndServe(":4435", logMw.Apply(identityMw.Apply(r))))
+	err := http.ListenAndServe(":4435", identityMw.Apply(r))
+	if err != nil {
+		panic(err)
+	}
 }

@@ -5,7 +5,6 @@ import (
 	"go.uber.org/zap"
 	"net/http"
 
-	"github.com/monkjunior/poc-kratos-hydra/pkg/common"
 	"github.com/monkjunior/poc-kratos-hydra/pkg/config"
 	"github.com/monkjunior/poc-kratos-hydra/pkg/log"
 	"github.com/monkjunior/poc-kratos-hydra/pkg/views"
@@ -50,15 +49,27 @@ type LoginForm struct {
 //
 // GET /auth/login/?flow=<flow_id>
 func (u *Users) GetLogin(w http.ResponseWriter, r *http.Request) {
-	// TODO: logging
+	logger := log.GetLogger().With(
+		zap.String("receiver", "User"),
+		zap.String("method", "GetLogin"),
+	)
 	flow := r.URL.Query().Get("flow")
 	if flow == "" {
 		http.Redirect(w, r, KratosPublicURL+KratosSSLoginBrowserPath, http.StatusFound)
+		logger.Info("redirect to Kratos to browse a new login flow")
 		return
 	}
+	logger.With(zap.String("log_flow_id", flow))
 	flowObject, res, err := u.kratosClient.V0alpha1Api.GetSelfServiceLoginFlow(r.Context()).Id(flow).Cookie(r.Header.Get("Cookie")).Execute()
 	if err != nil || res == nil || res.StatusCode != http.StatusOK {
-		// TODO: handle error when received wrong flow id, should create a new flow
+		if res != nil {
+			logger.With(zap.Int("response_status_code", res.StatusCode))
+			w.WriteHeader(res.StatusCode)
+		}
+		logger.Error("failed to get login flow info",
+			zap.Error(err),
+		)
+		//TODO: display error message
 		return
 	}
 
@@ -70,6 +81,7 @@ func (u *Users) GetLogin(w http.ResponseWriter, r *http.Request) {
 			Action:       flowObject.Ui.Action,
 		},
 	}
+	logger.Info("getting login page")
 	u.LoginView.Render(w, r, data)
 }
 
@@ -91,14 +103,27 @@ type RegistrationForm struct {
 //
 // GET /auth/registration/?flow=<flow_id>
 func (u *Users) GetRegistration(w http.ResponseWriter, r *http.Request) {
+	logger := log.GetLogger().With(
+		zap.String("receiver", "User"),
+		zap.String("method", "GetRegistration"),
+	)
 	flow := r.URL.Query().Get("flow")
 	if flow == "" {
 		http.Redirect(w, r, KratosPublicURL+KratosSSRegistrationBrowserPath, http.StatusFound)
+		logger.Info("redirect to Kratos to browse a new registration flow")
 		return
 	}
+	logger.With(zap.String("registration_flow_id", flow))
 	flowObject, res, err := u.kratosClient.V0alpha1Api.GetSelfServiceRegistrationFlow(r.Context()).Id(flow).Cookie(r.Header.Get("Cookie")).Execute()
 	if err != nil || res == nil || res.StatusCode != http.StatusOK {
-		common.LogOnError(err, res)
+		if res != nil {
+			logger.With(zap.Int("response_status_code", res.StatusCode))
+			w.WriteHeader(res.StatusCode)
+		}
+		logger.Error("failed to get registration flow info",
+			zap.Error(err),
+		)
+		//TODO: display error message
 		return
 	}
 	//kratos.PrintJSONPretty(flowObject)
@@ -110,11 +135,11 @@ func (u *Users) GetRegistration(w http.ResponseWriter, r *http.Request) {
 			Action:       flowObject.Ui.Action,
 		},
 	}
+	logger.Info("getting registration page")
 	u.RegistrationView.Render(w, r, data)
 }
 
 type ChangePasswordForm struct {
-	Token           string `schema:"token"`
 	CurrentPassword string `schema:"current_password"`
 	NewPassword     string `schema:"new_password"`
 	ConfirmPassword string `schema:"confirm_password"`
@@ -132,6 +157,14 @@ func (u *Users) PostChangePassword(w http.ResponseWriter, r *http.Request) {
 	err := parseForm(r, &form)
 	if err != nil {
 		logger.Error("failed to parse form", zap.Error(err))
+		w.WriteHeader(http.StatusForbidden)
+		return
+	}
+	if form.ConfirmPassword != form.NewPassword {
+		logger.Error("confirm password is not the same with new password",
+			zap.Error(ErrConfirmPasswordMismatched),
+		)
+		w.WriteHeader(http.StatusForbidden)
 		return
 	}
 	loginFlow, res, err := u.kratosClient.V0alpha1Api.InitializeSelfServiceLoginFlowWithoutBrowser(r.Context()).Execute()
@@ -142,10 +175,11 @@ func (u *Users) PostChangePassword(w http.ResponseWriter, r *http.Request) {
 		logger.Error("failed to init login flow",
 			zap.Error(err),
 		)
+		w.WriteHeader(http.StatusForbidden)
 		return
 	}
 	loginResult, res, err := u.kratosClient.V0alpha1Api.SubmitSelfServiceLoginFlow(r.Context()).Flow(loginFlow.Id).SubmitSelfServiceLoginFlowBody(
-		kratosClient.SubmitSelfServiceLoginFlowWithPasswordMethodBodyAsSubmitSelfServiceLoginFlowBody(&kratosClient.SubmitSelfServiceLoginFlowWithPasswordMethodBody{
+	kratosClient.SubmitSelfServiceLoginFlowWithPasswordMethodBodyAsSubmitSelfServiceLoginFlowBody(&kratosClient.SubmitSelfServiceLoginFlowWithPasswordMethodBody{
 			Method:             "password",
 			Password:           form.CurrentPassword,
 			PasswordIdentifier: uEmail,
@@ -156,12 +190,7 @@ func (u *Users) PostChangePassword(w http.ResponseWriter, r *http.Request) {
 			logger.With(zap.Int("response_status_code", res.StatusCode))
 		}
 		logger.Error("failed to validate current password", zap.Error(err))
-		return
-	}
-	if form.ConfirmPassword != form.NewPassword {
-		logger.Error("confirm password is not the same with new password",
-			zap.Error(ErrConfirmPasswordMismatched),
-		)
+		w.WriteHeader(http.StatusForbidden)
 		return
 	}
 	sessionToken := loginResult.GetSessionToken()
@@ -175,6 +204,7 @@ func (u *Users) PostChangePassword(w http.ResponseWriter, r *http.Request) {
 		logger.Error("failed to init change password flow",
 			zap.Error(err),
 		)
+		w.WriteHeader(http.StatusForbidden)
 		return
 	}
 
@@ -189,6 +219,7 @@ func (u *Users) PostChangePassword(w http.ResponseWriter, r *http.Request) {
 			logger.With(zap.Int("response_status_code", res.StatusCode))
 		}
 		logger.Error("failed to change password password", zap.Error(err))
+		w.WriteHeader(http.StatusForbidden)
 		return
 	}
 	logger.Info("change password successfully")
