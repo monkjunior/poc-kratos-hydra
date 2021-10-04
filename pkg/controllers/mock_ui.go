@@ -18,13 +18,15 @@ var (
 
 func NewMockUISites() *MockUISites {
 	return &MockUISites{
-		Home: views.NewView("bootstrap", "mock_ui_home"),
+		Home:         views.NewView("bootstrap", "mock_ui_home"),
+		CallbackView: views.NewView("bootstrap", "callback"),
 	}
 }
 
 // MockUISites is a list of sites that our fake UI requires.
 type MockUISites struct {
-	Home *views.View
+	Home         *views.View
+	CallbackView *views.View
 }
 
 // MockSiteData stores auth code login URL
@@ -33,20 +35,36 @@ type MockSiteData struct {
 }
 
 // GetHome just contain a login button to perform login with hydra
-func (f *MockUISites) GetHome(w http.ResponseWriter, r *http.Request) {
+func (m *MockUISites) GetHome(w http.ResponseWriter, r *http.Request) {
 	hydraLoginURL, oauthState = config.Cfg.GetBrowserAuthCodeURL()
 	data := views.Data{
 		Yield: MockSiteData{
 			HydraLoginURL: hydraLoginURL,
 		},
 	}
-	f.Home.Render(w, r, data)
+	m.Home.Render(w, r, data)
+}
+
+// CallbackForm stores result token after OAuth flow
+type CallbackForm struct {
+	Error        *CallbackError
+	AccessToken  string
+	RefreshToken string
+	Expiry       string
+	IDToken      string
+}
+
+type CallbackError struct {
+	Name        string
+	Description string
+	Hint        string
+	Debug       string
 }
 
 // GetCallback receive authorization code and exchange token with Hydra, our OAuth2.0/OIDC server
 // then it render token, and other result to viewer.
 // GET /callback
-func (u *Users) GetCallback(w http.ResponseWriter, r *http.Request) {
+func (m *MockUISites) GetCallback(w http.ResponseWriter, r *http.Request) {
 	if len(r.URL.Query().Get("error")) > 0 {
 		data := views.Data{
 			Yield: CallbackForm{
@@ -58,7 +76,7 @@ func (u *Users) GetCallback(w http.ResponseWriter, r *http.Request) {
 				},
 			},
 		}
-		u.CallbackView.Render(w, r, data)
+		m.CallbackView.Render(w, r, data)
 		return
 	}
 
@@ -73,7 +91,7 @@ func (u *Users) GetCallback(w http.ResponseWriter, r *http.Request) {
 				},
 			},
 		}
-		u.CallbackView.Render(w, r, data)
+		m.CallbackView.Render(w, r, data)
 		return
 	}
 
@@ -88,7 +106,7 @@ func (u *Users) GetCallback(w http.ResponseWriter, r *http.Request) {
 				},
 			},
 		}
-		u.CallbackView.Render(w, r, data)
+		m.CallbackView.Render(w, r, data)
 		return
 	}
 
@@ -101,7 +119,7 @@ func (u *Users) GetCallback(w http.ResponseWriter, r *http.Request) {
 			IDToken:      fmt.Sprintf("%v", idToken),
 		},
 	}
-	u.CallbackView.Render(w, r, data)
+	m.CallbackView.Render(w, r, data)
 	return
 }
 

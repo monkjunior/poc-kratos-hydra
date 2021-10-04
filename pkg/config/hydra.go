@@ -76,5 +76,7 @@ func (h *Config) GetHydraOauth2Config() *hydraModels.OAuth2Client {
 		ResponseTypes: h.Hydra.Client.ResponseTypes,
 		Scope:         h.Hydra.Client.Scopes,
 		RedirectUris:  h.Hydra.Client.CallbacksURL,
+		// TODO: put this to viper config
+		TokenEndpointAuthMethod: "client_secret_post",
 	}
 }

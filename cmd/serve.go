@@ -44,12 +44,12 @@ func runServeCmd(cmd *cobra.Command, args []string) {
 	r.Handle("/", publicSites.Home)
 	r.Handle("/dashboard", protectedSites.Dashboard)
 
-	r.HandleFunc("/callback", userC.GetCallback).Methods("GET")
 	r.HandleFunc("/auth/login", userC.GetLogin).Methods("GET")
 	r.HandleFunc("/auth/registration", userC.GetRegistration).Methods("GET")
 	r.HandleFunc("/auth/hydra/login", hydraC.GetHydraLogin).Methods("GET")
 	r.HandleFunc("/auth/hydra/consent", hydraC.GetHydraConsent).Methods("GET")
 	r.HandleFunc("/auth/hydra/consent", hydraC.PostHydraConsent).Methods("POST")
+	r.HandleFunc("/user/change-password", userC.PostChangePassword).Methods("POST")
 
 	// Assets
 	assetsHandler := http.FileServer(http.Dir("./assets/"))
