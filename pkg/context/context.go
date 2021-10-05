@@ -5,8 +5,8 @@ import (
 )
 
 const (
-	sessionKey         privateKey = "is_session_active"
-	logoutKey          privateKey = "log_out_url"
+	sessionKey privateKey = "is_session_active"
+	logoutKey  privateKey = "log_out_url"
 )
 
 type privateKey string

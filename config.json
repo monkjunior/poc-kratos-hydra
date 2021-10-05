@@ -4,7 +4,7 @@
   "kratos": {
     "host": "oathkeeper:4455",
     "scheme": "http",
-    "debug": true,
+    "debug": false,
     "publicBasePath": "/.ory/kratos/public"
   },
   "hydra": {

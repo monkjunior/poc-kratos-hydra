@@ -126,7 +126,6 @@ func (u *Users) GetRegistration(w http.ResponseWriter, r *http.Request) {
 		//TODO: display error message
 		return
 	}
-	//kratos.PrintJSONPretty(flowObject)
 	data := views.Data{
 		Yield: RegistrationForm{
 			CsrfToken:    flowObject.Ui.GetNodes()[0].Attributes.UiNodeInputAttributes.Value.(string),
@@ -179,7 +178,7 @@ func (u *Users) PostChangePassword(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	loginResult, res, err := u.kratosClient.V0alpha1Api.SubmitSelfServiceLoginFlow(r.Context()).Flow(loginFlow.Id).SubmitSelfServiceLoginFlowBody(
-	kratosClient.SubmitSelfServiceLoginFlowWithPasswordMethodBodyAsSubmitSelfServiceLoginFlowBody(&kratosClient.SubmitSelfServiceLoginFlowWithPasswordMethodBody{
+		kratosClient.SubmitSelfServiceLoginFlowWithPasswordMethodBodyAsSubmitSelfServiceLoginFlowBody(&kratosClient.SubmitSelfServiceLoginFlowWithPasswordMethodBody{
 			Method:             "password",
 			Password:           form.CurrentPassword,
 			PasswordIdentifier: uEmail,
